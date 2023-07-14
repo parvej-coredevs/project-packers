@@ -1,0 +1,23 @@
+import { Schema, model } from "mongoose";
+
+const schema = new Schema({
+  user: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+  },
+  paymentId: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  orderNumber: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  items: {
+    type: [Schema.Types.ObjectId],
+    ref: "Product",
+    required: true,
+  },
+});

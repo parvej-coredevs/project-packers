@@ -7,4 +7,6 @@
   "editor.formatOnType": true,
   "files.trimTrailingWhitespace": true,
   "editor.minimap.enabled": false,
+  "javascript.preferences.quoteStyle": "single",
+  "typescript.preferences.quoteStyle": "single",
 }

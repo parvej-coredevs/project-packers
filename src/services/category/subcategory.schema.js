@@ -1,20 +1,18 @@
 import { Schema, model } from "mongoose";
-import paginate from "mongoose-paginate-v2";
-import slugify from "../../utils/slugify";
+import slugify from "slugify";
 
 const schema = new Schema(
   {
     title: { type: String, required: true },
     slug: { type: String, unique: true },
+    parentCat: { type: Schema.Types.ObjectId, ref: "Category" },
   },
   { timestamps: true, versionKey: false }
 );
 
-schema.plugin(paginate);
-
 schema.pre("save", function (next) {
-  this.slug = slugify(this.title);
+  this.slug = slugify(this.title, { lower: true });
   next();
 });
 
-export default model("Category", schema);
+export default model("SubCategory", schema);
