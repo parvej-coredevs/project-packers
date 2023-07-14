@@ -15,9 +15,17 @@ const schema = new Schema({
     required: true,
     unique: true,
   },
-  items: {
-    type: [Schema.Types.ObjectId],
-    ref: "Product",
+  items: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Product",
+      required: true,
+    },
+  ],
+  status: {
+    type: String,
     required: true,
+    enum: ["pending", "processing", "shipping", "completed", "canceld"],
+    default: "pending",
   },
 });

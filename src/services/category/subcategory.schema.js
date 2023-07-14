@@ -1,5 +1,5 @@
 import { Schema, model } from "mongoose";
-import slugify from "slugify";
+import slugify from "../../utils/slugify";
 
 const schema = new Schema(
   {
@@ -11,7 +11,7 @@ const schema = new Schema(
 );
 
 schema.pre("save", function (next) {
-  this.slug = slugify(this.title, { lower: true });
+  this.slug = slugify(this.title);
   next();
 });
 

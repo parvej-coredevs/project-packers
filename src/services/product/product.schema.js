@@ -1,6 +1,6 @@
 import { Schema, model } from "mongoose";
-import slugify from "slugify";
 import paginate from "mongoose-paginate-v2";
+import slugify from "../../utils/slugify";
 
 const schema = new Schema({
   title: {
@@ -45,10 +45,6 @@ const schema = new Schema({
     enum: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
     default: 3,
   },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
   status: {
     type: String,
     required: true,
@@ -59,11 +55,21 @@ const schema = new Schema({
     type: Array,
     required: true,
   },
+  category: {
+    type: Schema.Types.ObjectId,
+    ref: "Category",
+    required: true,
+  },
+  subCategory: {
+    type: Schema.Types.ObjectId,
+    ref: "SubCategory",
+    required: true,
+  },
 });
 
 schema.plugin(paginate);
 
 schema.pre("save", function (next) {
-  this.slug = slugify(this.title, { lower: true });
+  this.slug = slugify(this.title);
   next();
 });

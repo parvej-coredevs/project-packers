@@ -5,8 +5,16 @@ const schema = new Schema({
     type: Schema.Types.ObjectId,
     ref: "User",
   },
-  items: {
-    type: [Schema.Types.ObjectId],
-    ref: "Product",
+  items: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Product",
+    },
+  ],
+  totalPrice: {
+    type: Number,
+    required: true,
   },
 });
+
+export default model("Cart", schema);
