@@ -44,4 +44,18 @@ export const create =
  */
 export const getCategory =
   ({ db }) =>
-  (req, res) => {};
+  (req, res) => {
+    try {
+      db.find({ table: "category" })
+        .then(async (categories) => {
+          res.status(200).send(categories);
+        })
+        .catch((err) => {
+          console.error(err);
+          res.status(500).send("Something went wrong");
+        });
+    } catch (error) {
+      console.error(error);
+      res.status(500).send("Something went wrong");
+    }
+  };
