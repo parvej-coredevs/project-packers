@@ -28,4 +28,14 @@ const schema = new Schema({
     enum: ["pending", "processing", "shipping", "completed", "canceld"],
     default: "pending",
   },
+  deliveryLastDate: {
+    type: Date,
+    required: true,
+  },
+  note: {
+    type: String,
+    required: true,
+  },
 });
+
+export default model("Order", schema);

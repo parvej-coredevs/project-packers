@@ -21,7 +21,15 @@ export const create =
         createAllowed.includes(key)
       );
       if (!category) return res.status(400).send("Validation Failed");
-      db.create({ table: "category", key: req.body });
+      db.create({ table: "category", key: req.body })
+        .then(async (category) => {
+          await db.save(category);
+          res.status(201).send(category);
+        })
+        .catch((err) => {
+          console.error(err);
+          res.status(500).send("Something went wrong");
+        });
     } catch (error) {
       console.error(error);
       res.status(500).send("Something went wrong");
