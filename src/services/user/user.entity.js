@@ -8,13 +8,15 @@ import User from "./user.schema";
 const createAllowed = new Set([
   "firstName",
   "lastName",
-  "userName",
   "email",
+  "avatar",
+  "userName",
   "password",
   "role",
   "gender",
   "dob",
   "status",
+  "phone",
 ]);
 const allowedQuery = new Set([
   "firstName",
@@ -54,7 +56,7 @@ export const register =
       // const user = await db.create({ table: User, key: { ...req.body } });
       db.create({
         table: User,
-        key: { ...req.body, remainigTime: req?.body?.workingHours },
+        key: req.body,
       })
         .then(async (user) => {
           await db.save(user);
@@ -91,7 +93,7 @@ export const login =
       const isValid = await bcrypt.compare(req.body.password, user.password);
       if (!isValid) return res.status(401).send("Unauthorized");
       const token = jwt.sign({ id: user.id }, settings.secret);
-      res.cookie(settings.secret, token, {
+      res.cookie("token", token, {
         httpOnly: true,
         ...(settings.useHTTP2 && {
           sameSite: "None",
