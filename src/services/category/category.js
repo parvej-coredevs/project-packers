@@ -27,3 +27,4 @@ export default function category() {
    */
   this.route.get("/category", getCategory(this));
 }
+e;
