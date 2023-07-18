@@ -15,7 +15,14 @@ export default function category() {
 
   /**
    * GET /category
-   * @description This route is used for get all category.
+   * @description This route is used for get all category with paginattion.
+   * @returns {Object} 200 - all category list.
+   */
+  this.route.get("/category", getCategory(this));
+
+  /**
+   * GET /category
+   * @description This route is used for get all category with paginattion.
    * @returns {Object} 200 - all category list.
    */
   this.route.get("/category", getCategory(this));
