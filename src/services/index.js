@@ -1,7 +1,7 @@
-import demo from './demo/demo';
-import user from './user/user';
+import user from "./user/user";
+import category from "./category/category";
 
 export const services = (app) => {
-  app.configure(demo);
   app.configure(user);
+  app.configure(category);
 };

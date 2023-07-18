@@ -1,6 +1,26 @@
 import { Schema, model } from "mongoose";
 import paginate from "mongoose-paginate-v2";
 
+const shippingAddress = new Schema({
+  firstName: { type: String },
+  lastName: { type: String },
+  address: { type: String },
+  city: { type: String },
+  state: { type: String },
+  country: { type: String },
+  zip: { type: String },
+});
+
+const billingAddress = new Schema({
+  firstName: { type: String },
+  lastName: { type: String },
+  address: { type: String },
+  city: { type: String },
+  state: { type: String },
+  country: { type: String },
+  zip: { type: String },
+});
+
 const schema = new Schema(
   {
     firstName: { type: String, required: true },
@@ -18,7 +38,9 @@ const schema = new Schema(
     dob: { type: Date },
     gender: { type: String, enum: ["male", "female", "others"] },
     status: { type: String, enum: ["active", "deactive"] },
-    phone: { type: Number },
+    phone: { type: String },
+    shippingAddress: shippingAddress,
+    billingAddress: billingAddress,
   },
   { timestamps: true, versionKey: false }
 );

@@ -9,5 +9,6 @@
   "EMAIL_NAME": "",
   "EMAIL_FROM": "from@example.com",
   "MONGODB_URL": "mongodb+srv://parvejhossain:parvejhossain@cluster0.jkdxpyh.mongodb.net/projectpacker",
-  "secret": "ywaierh3294209"
+  "token_secret": "ywaierh3294209",
+  "token_key": "token"
 }

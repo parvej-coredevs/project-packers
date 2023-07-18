@@ -1,5 +1,5 @@
-const slugify = require("slugify");
+import slugify from "slugify";
 
-export default slugify = (data, option = { lower: true }) => {
+export default (data, option = { lower: true }) => {
   return slugify(data, option);
 };

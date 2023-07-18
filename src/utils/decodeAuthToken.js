@@ -1,7 +1,7 @@
-import jwt from 'jsonwebtoken';
-import * as operations from '../controllers/operations';
-import User from '../services/user/user.schema';
-import settings from '../../settings.json';
+import jwt from "jsonwebtoken";
+import * as operations from "../controllers/operations";
+import User from "../services/user/user.schema";
+import settings from "../../settings.json";
 
 /**
  * This function is used for decoding auth token.
@@ -10,12 +10,17 @@ import settings from '../../settings.json';
  */
 export default async function decodeAuthToken(token) {
   try {
-    const decoded = jwt.verify(token, settings.secret);
-    const user = await operations.findOne({ table: User, key: { id: decoded.id, populate: { path: 'role', select: 'name department' } } });
-    if (!user) throw new Error('user not found');
+    const decoded = jwt.verify(token, settings.token_secret);
+    const user = await operations.findOne({
+      table: User,
+      key: {
+        id: decoded.id,
+        populate: { path: "role", select: "name department" },
+      },
+    });
+    if (!user) throw new Error("user not found");
     return user;
-  }
-  catch (e) {
+  } catch (e) {
     console.log(e);
   }
 }
