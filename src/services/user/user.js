@@ -63,7 +63,7 @@ export default function user() {
 
   /**
    * PATCH ‘/user/:id’
-   * @description this route is used to update user profile.
+   * @description this route is used to update user profile only admin can allowed.
    * @response {Object} 200 - the user.
    */
   this.route.patch("/user/:id", auth, checkRole(["admin"]), updateUser(this));

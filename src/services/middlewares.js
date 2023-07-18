@@ -1,4 +1,5 @@
-import decodeAuthToken from '../utils/decodeAuthToken';
+import decodeAuthToken from "../utils/decodeAuthToken";
+import settings from "../../settings.json";
 
 /**
  * This function is used for validating user role.
@@ -10,11 +11,11 @@ import decodeAuthToken from '../utils/decodeAuthToken';
 export function checkRole(allowed) {
   return async (req, res, next) => {
     try {
+      if (req.user.role === "super-admin") return next();
       if (allowed.includes(req.user.role)) return next();
-      else throw new Error('Unauthorized.');
-    }
-    catch (e) {
-      res.status(401).send({ status: 401, reason: 'unauthorized' });
+      else throw new Error("Unauthorized.");
+    } catch (e) {
+      res.status(401).send({ status: 401, reason: "unauthorized" });
     }
   };
 }
@@ -25,15 +26,25 @@ export function checkRole(allowed) {
  */
 export async function auth(req, res, next) {
   try {
-    const token = req.cookies?.coredevs || (process.env.NODE_ENV === 'development' ? req.header('Authorization')?.replace('Bearer ', '') : null);
-    if (!token) return res.status(401).send({ status: 401, reason: 'Unauthorized' });
+    const token =
+      req.cookies?.[settings.token_key] ||
+      (process.env.NODE_ENV === "development"
+        ? req.header("Authorization")?.replace("Bearer ", "")
+        : null);
+    if (!token)
+      return res
+        .status(401)
+        .send({ status: 401, reason: "Unauthorized! Invalid Token" });
     const user = await decodeAuthToken(token);
-    if (!user || user.status === 'deactive') return res.status(401).send({ status: 401, reason: 'Unauthorized' });
+    if (!user || user.status === "deactive")
+      return res
+        .status(401)
+        .send({ status: 401, reason: "Unauthorized! User is deactive" });
     req.token = token;
     req.user = user;
     next();
   } catch (e) {
     console.log(e);
-    res.status(401).send({ status: 401, reason: 'Unauthorized' });
+    res.status(401).send({ status: 401, reason: "Unauthorized" });
   }
 }

@@ -89,11 +89,11 @@ export const login =
         table: User,
         key: { email: req.body.email },
       });
-      if (!user) return res.status(401).send("Unauthorized");
+      if (!user) return res.status(401).send("Invalid Email Address");
       const isValid = await bcrypt.compare(req.body.password, user.password);
-      if (!isValid) return res.status(401).send("Unauthorized");
-      const token = jwt.sign({ id: user.id }, settings.secret);
-      res.cookie("token", token, {
+      if (!isValid) return res.status(401).send("Invalid Password");
+      const token = jwt.sign({ id: user.id }, settings.token_secret);
+      res.cookie(settings.token_key, token, {
         httpOnly: true,
         ...(settings.useHTTP2 && {
           sameSite: "None",
@@ -135,7 +135,7 @@ export const logout =
   ({ settings }) =>
   async (req, res) => {
     try {
-      res.clearCookie(settings.secret, {
+      res.clearCookie("token", {
         httpOnly: true,
         ...(settings.useHTTP2 && {
           sameSite: "None",
