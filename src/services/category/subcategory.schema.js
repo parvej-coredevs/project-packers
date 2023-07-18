@@ -1,4 +1,5 @@
 import { Schema, model } from "mongoose";
+import paginate from "mongoose-paginate-v2";
 
 const schema = new Schema(
   {
@@ -7,5 +8,7 @@ const schema = new Schema(
   },
   { timestamps: true, versionKey: false }
 );
+
+schema.plugin(paginate);
 
 export default model("SubCategory", schema);
