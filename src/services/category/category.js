@@ -40,3 +40,4 @@ export default function category() {
    */
   this.route.get("/sub-category", getSubCategory(this));
 }
+e;
