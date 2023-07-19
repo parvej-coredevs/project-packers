@@ -3,13 +3,15 @@ import {
   create,
   getProduct,
   updateProduct,
+  deleteProduct,
+  relatedProduct,
 } from "../product/product.entity.js";
 
 export default function product() {
   /**
    * POST /products
    * @description This route is used to create a product.
-   * @response {Object} 201 - new created product
+   * @response {Object} 201 - create new product
    */
   this.route.post("/products", auth, checkRole(["admin"]), create(this));
 
@@ -21,9 +23,33 @@ export default function product() {
   this.route.get("/products", getProduct(this));
 
   /**
-   * PATCH /products
-   * @description This route is used for update product.
+   * PATCH /products/:id
+   * @description This route is used for update product. only admin can update products
    * @response {Object} 200 - updated product object
    */
-  this.route.patch("/products", updateProduct(this));
+  this.route.patch(
+    "/products/:id",
+    auth,
+    checkRole(["admin"]),
+    updateProduct(this)
+  );
+
+  /**
+   * DELETE /products/:id
+   * @description This route is used for delete product. only admin can delete products
+   * @response {Object} 200 - updated product object
+   */
+  this.route.delete(
+    "/products/:id",
+    auth,
+    checkRole(["admin"]),
+    deleteProduct(this)
+  );
+
+  /**
+   * GET /products/:id/related
+   * @description This route is used for related product. when customer open single product user also can see some related product.
+   * @response {Object} 200 - related product object
+   */
+  this.route.get("/products/:id/related", relatedProduct(this));
 }

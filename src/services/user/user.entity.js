@@ -176,7 +176,7 @@ export const userProfile =
         table: User,
         key: {
           id: req.params.id,
-          populate: { path: "role", select: "name department" },
+          // populate: { path: "role", select: "name department" },
         },
       });
       if (!user) return res.status(404).send("No result found");

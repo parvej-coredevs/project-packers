@@ -1,12 +1,13 @@
 import Category from "./category.schema";
 import SubCategory from "./subcategory.schema";
-
+import Product from "../product/product.schema";
+import { Types } from "mongoose";
+import checkAssociation from "../../utils/checkAssociation";
 /**
  * these set are use to validate the category name
  */
-const createAllowed = new Set(["name"]);
-const updateAllowed = new Set(["name"]);
-const allowedQuery = new Set(["name"]);
+const createAllowed = new Set(["name", "slug"]);
+const allowedQuery = new Set(["name", "slug"]);
 
 /**
  * create a new category
@@ -65,6 +66,63 @@ export const getCategory =
   };
 
 /**
+ * This function is used update a category by admin.
+ * @param {Object} req This is the request object.
+ * @param {Object} res this is the response object
+ * @returns It returns the updated category data.
+ */
+export const updateCategory =
+  ({ db }) =>
+  async (req, res) => {
+    try {
+      const category = await db.findOne({
+        table: Category,
+        key: { id: req.params.id },
+      });
+      if (!category)
+        return res.status(400).send("Bad request, Invalid Category ID");
+      category.name = req.body.name;
+      await db.save(category);
+      res.status(200).send(category);
+    } catch (err) {
+      console.log(err);
+      res.status(err.status || 500).send(err.reason || "Something went wrong");
+    }
+  };
+
+/**
+ * This function is used update a category by admin.
+ * @param {Object} req This is the request object.
+ * @param {Object} res this is the response object
+ * @returns It returns the updated category data.
+ */
+export const deleteCategory =
+  ({ db }) =>
+  async (req, res) => {
+    try {
+      let check = await checkAssociation(db, Product, {
+        category: req.params.id,
+      });
+
+      if (check)
+        return res
+          .status(400)
+          .send("Can't delete product, This category associated with Product");
+
+      let category = await db.remove({
+        table: Category,
+        key: { id: req.params.id },
+      });
+      if (!category)
+        return res.status(404).send({ messae: "Category not found" });
+      res.status(200).send({ message: "Deleted Successfully" });
+    } catch (err) {
+      console.log(err);
+      res.status(500).send({ message: "Something went wrong" });
+    }
+  };
+
+/**
  * create a new sub category
  * @param { Object } db the db object for interacting with the database
  * @param { Object } req the request object containing the properties of category
@@ -101,7 +159,10 @@ export const getSubCategory =
     try {
       db.find({
         table: SubCategory,
-        key: { paginate: req.query.paginate === "true" },
+        key: {
+          paginate: req.query.paginate === "true",
+          populate: { path: "parentCat", select: "name" },
+        },
       })
         .then(async (categories) => {
           res.status(200).send(categories);
@@ -113,5 +174,62 @@ export const getSubCategory =
     } catch (error) {
       console.error(error);
       res.status(500).send("Something went wrong");
+    }
+  };
+
+/**
+ * This function is used update a category by admin.
+ * @param {Object} req This is the request object.
+ * @param {Object} res this is the response object
+ * @returns It returns the updated category data.
+ */
+export const updateSubCategory =
+  ({ db }) =>
+  async (req, res) => {
+    try {
+      const result = await db.update({
+        table: SubCategory,
+        key: {
+          id: req.params.id,
+          body: req.body,
+        },
+      });
+      res.status(200).send(result);
+    } catch (err) {
+      console.log(err);
+      res.status(err.status || 500).send(err.reason || "Something went wrong");
+    }
+  };
+
+/**
+ * This function is used update a category by admin.
+ * @param {Object} req This is the request object.
+ * @param {Object} res this is the response object
+ * @returns It returns the updated category data.
+ */
+export const deleteSubCategory =
+  ({ db }) =>
+  async (req, res) => {
+    try {
+      let check = await checkAssociation(db, Product, {
+        sub_category: req.params.id,
+      });
+
+      if (check)
+        return res.status(400).send({
+          message:
+            "Can't delete product, This sub category associated with Product",
+        });
+
+      let category = await db.remove({
+        table: SubCategory,
+        key: { id: req.params.id },
+      });
+      if (!category)
+        return res.status(404).send({ message: "Sub Category not found" });
+      res.status(200).send({ message: "Deleted Successfully" });
+    } catch (err) {
+      console.log(err);
+      res.status(500).send({ message: "Something went wrong" });
     }
   };
