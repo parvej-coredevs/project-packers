@@ -23,22 +23,18 @@ const billingAddress = new Schema({
 
 const schema = new Schema(
   {
-    firstName: { type: String, required: true },
-    lastName: { type: String, required: true },
+    full_name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     avatar: { type: String },
     role: {
       type: String,
       required: true,
-      enum: ["super-admin", "admin", "manager", "customer"],
+      enum: ["super-admin", "admin", "staff", "customer"],
       default: "customer",
     },
-    userName: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    dob: { type: Date },
-    gender: { type: String, enum: ["male", "female", "others"] },
-    status: { type: String, enum: ["active", "deactive"] },
     phone: { type: String },
+    status: { type: String, enum: ["active", "deactive"] },
     shippingAddress: shippingAddress,
     billingAddress: billingAddress,
   },
