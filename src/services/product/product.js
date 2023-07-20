@@ -2,6 +2,7 @@ import { auth, checkRole } from "../../services/middlewares.js";
 import {
   create,
   getProduct,
+  getSingleProduct,
   updateProduct,
   deleteProduct,
   relatedProduct,
@@ -21,6 +22,13 @@ export default function product() {
    * @response {Object} 200 - product list
    */
   this.route.get("/products", getProduct(this));
+
+  /**
+   * GET /products/:id
+   * @description This route is used to find single product.
+   * @response {Object} 200 - single product object
+   */
+  this.route.get("/products/:id", getSingleProduct(this));
 
   /**
    * PATCH /products/:id

@@ -4,6 +4,11 @@ import { promisify } from "util";
 
 const unlinkAsync = promisify(fs.unlink);
 
+/**
+ * This function is used for delete file.
+ * @param {Array} filenames array of filenames.
+ */
+
 export default async function deleteFiles(filenames) {
   if (!Array.isArray(filenames)) filenames = [filenames];
 

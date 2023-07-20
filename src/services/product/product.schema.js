@@ -29,6 +29,11 @@ const schema = new Schema(
       ref: "SubCategory",
       required: true,
     },
+    images: [
+      {
+        type: String,
+      },
+    ],
     price: {
       type: Number,
       required: true,
@@ -41,7 +46,15 @@ const schema = new Schema(
       type: String,
       required: true,
     },
+    productFrom: {
+      type: String,
+      required: true,
+    },
     aprox_delivery: {
+      type: String,
+      required: true,
+    },
+    moneyback_gurante: {
       type: String,
       required: true,
     },
@@ -55,11 +68,6 @@ const schema = new Schema(
       enum: ["draft", "published", "archived"],
       default: "draft",
     },
-    images: [
-      {
-        type: String,
-      },
-    ],
     seller_takes: {
       type: Number,
       required: true,
@@ -69,6 +77,14 @@ const schema = new Schema(
       required: true,
     },
     packers_fee: {
+      type: Number,
+      required: true,
+    },
+    shipping_fee: {
+      type: Number,
+      required: true,
+    },
+    grandTotal: {
       type: Number,
       required: true,
     },

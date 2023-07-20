@@ -15,7 +15,7 @@ export default async function decodeAuthToken(token) {
       table: User,
       key: {
         id: decoded.id,
-        populate: { path: "role", select: "name department" },
+        // populate: { path: "role", select: "name department" },
       },
     });
     if (!user) throw new Error("user not found");

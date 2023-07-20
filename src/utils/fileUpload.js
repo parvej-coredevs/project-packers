@@ -1,3 +1,10 @@
+/**
+ * This function is used uploading single or multiple file.
+ * @param {Array} fileArray array of file object.
+ * @param {Callback} imageUp is callback function to image in directory
+ * @returns returns the array of string to uploaded image path.
+ */
+
 export default async function uploadImages(fileArray, imageUp) {
   if (!Array.isArray(fileArray)) {
     fileArray = [fileArray];

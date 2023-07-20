@@ -16,12 +16,16 @@ const createAllowed = new Set([
   "price",
   "comparePrice",
   "productLink",
+  "productFrom",
   "aprox_delivery",
+  "moneyback_gurante",
   "stock",
   "status",
   "seller_takes",
   "sales_taxs",
   "packers_fee",
+  "shipping_fee",
+  "grandTotal",
 ]);
 const updateAllowed = new Set([
   "name",
@@ -31,19 +35,26 @@ const updateAllowed = new Set([
   "tags",
   "images",
   "price",
-  "compare_price",
+  "comparePrice",
   "productLink",
+  "productFrom",
   "aprox_delivery",
+  "moneyback_gurante",
   "stock",
   "status",
   "seller_takes",
   "sales_taxs",
   "packers_fee",
+  "shipping_fee",
+  "grandTotal",
 ]);
 const allowedQuery = new Set([
-  "_id",
+  "name",
+  "description",
   "category",
   "sub_category",
+  "tags",
+  "_id",
   "price",
   "status",
   "search",
@@ -68,17 +79,8 @@ export const create =
       if (!valid) return res.status(400).send("Bad request");
 
       // upload all products images
-      req.body.images = await fileUpload(req.files.images, imageUp);
-      // req.body.images = [];
-      // if (req.files && Array.isArray(req.files.images)) {
-      //   for (let item of req.files.images) {
-      //     const product = await imageUp(item?.path);
-      //     req.body.images.push(product);
-      //   }
-      // } else {
-      //   const product = await imageUp(req?.files?.images?.path);
-      //   req.body.images.push(product);
-      // }
+      if (req?.files)
+        req.body.images = await fileUpload(req.files.images, imageUp);
 
       // insert data in product table
       db.create({
@@ -136,6 +138,33 @@ export const getProduct =
           //   return res.status(200).send(products);
           // }
 
+          res.status(200).send(products);
+        })
+        .catch((err) => {
+          console.error(err);
+          res.status(500).send("Error: " + err.message);
+        });
+    } catch (error) {
+      console.error(error);
+      res.status(500).send("Something went wrong");
+    }
+  };
+
+/**
+ * get single products
+ * @param { Object } db the db object for interacting with the database
+ * @param { Object } req the request object containing the properties of product
+ * @returns { Object } returns the single product object
+ */
+export const getSingleProduct =
+  ({ db }) =>
+  (req, res) => {
+    try {
+      db.findOne({
+        table: Product,
+        key: { id: req.params.id },
+      })
+        .then(async (products) => {
           res.status(200).send(products);
         })
         .catch((err) => {
