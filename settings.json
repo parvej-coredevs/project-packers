@@ -4,11 +4,12 @@
   "useHTTP2": false,
   "SMTP_HOST": "",
   "SMTP_PORT": "",
-  "SMTP_USER": "",
-  "SMTP_PASSWORD": "",
-  "EMAIL_NAME": "",
+  "SMTP_USER": "parvejhossain4040@gmail.com",
+  "SMTP_PASSWORD": "tukrgibhkezxpoqu",
+  "EMAIL_NAME": "Parvej Hossain",
   "EMAIL_FROM": "from@example.com",
   "MONGODB_URL": "mongodb+srv://parvejhossain:parvejhossain@cluster0.jkdxpyh.mongodb.net/projectpacker",
   "token_secret": "ywaierh3294209",
-  "token_key": "token"
+  "token_key": "token",
+  "reset_pass_secret": "yuaslkfjlksadfoewjff"
 }

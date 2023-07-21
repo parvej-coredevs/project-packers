@@ -9,6 +9,9 @@ import {
   updateOwn,
   updateUser,
   userProfile,
+  resetPassword,
+  verifyOtp,
+  updatePassword,
 } from "./user.entity";
 
 export default function user() {
@@ -79,4 +82,25 @@ export default function user() {
     checkRole(["admin", "super-admin"]),
     remove(this)
   );
+
+  /**
+   * POST /user/reset-password
+   * @description this route is used for reset user password.
+   * @response {Object} 200 - encrypted token.
+   */
+  this.route.post("/user/reset-password", resetPassword(this));
+
+  /**
+   * POST /user/verify-otp
+   * @description this route is used for verify otp.
+   * @response {Object} 200 - encrypted token.
+   */
+  this.route.post("/user/verify-otp", verifyOtp(this));
+
+  /**
+   * POST /user/verify-otp
+   * @description this route is used for verify otp.
+   * @response {Object} 200 - encrypted token.
+   */
+  this.route.post("/user/new-password", updatePassword(this));
 }

@@ -1,6 +1,9 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import User from "./user.schema";
+import otpGenerate from "../../utils/otpGenerate";
+import { decryptData, encryptData } from "../../utils/Token";
+import settings from "../../../settings.json";
 
 /**
  * these are the set to validate the request body or query.
@@ -267,6 +270,94 @@ export const remove =
       const user = await db.remove({ table: User, key: { id } });
       if (!user) return res.status(404).send({ messae: "User not found" });
       res.status(200).send({ message: "Deleted Successfully" });
+    } catch (err) {
+      console.log(err);
+      res.status(500).send({ message: "Something went wrong" });
+    }
+  };
+
+export const resetPassword =
+  ({ db, mail }) =>
+  async (req, res) => {
+    try {
+      const user = await db.findOne({
+        table: User,
+        key: { email: req.body.email },
+      });
+      if (!user)
+        return res
+          .status(404)
+          .send({ messae: "Invalid Email, User not found" });
+
+      const otp = otpGenerate();
+      const token = `${encryptData(otp)}|${
+        new Date().getTime() + 1000 * 60 * 5
+      }`;
+
+      // console.log(otp);
+      // console.log(token);
+
+      const sendMail = await mail({
+        receiver: user.email,
+        subject: "Reset Passwords",
+        body: `Your Reset Password Code : ${otp}`,
+        type: "text",
+      });
+
+      if (!sendMail) return res.status(500).send("Failed to reset password");
+      res.status(200).send({ token });
+    } catch (err) {
+      console.log(err);
+      res.status(500).send({ message: "Something went wrong" });
+    }
+  };
+
+export const verifyOtp = () => async (req, res) => {
+  try {
+    const [token, expireTime] = req.body.token.split("|");
+    const decryptToken = decryptData(token);
+    const currentTime = new Date().getTime();
+
+    if (currentTime > expireTime) {
+      return res.status(500).send("OTP code is expired");
+    }
+
+    if (!decryptToken === req.body.code) {
+      return res.status(500).send("Invalid OTP code");
+    }
+
+    const newToken = encryptData(settings.reset_pass_secret);
+
+    res.status(200).send({ newToken });
+  } catch (err) {
+    console.log(err);
+    res.status(500).send({ message: "Something went wrong" });
+  }
+};
+
+export const updatePassword =
+  ({ db }) =>
+  async (req, res) => {
+    try {
+      const decryptToken = decryptData(req.body.token);
+
+      if (!decryptToken === settings.token_secret) {
+        return res.status(500).send({ message: "Invalid Request" });
+      }
+
+      if (req.body.password !== req.body.confirmPassword) {
+        return res.status(500).send({ message: "Password Does Not Match" });
+      }
+
+      const user = await db.findOne({
+        table: User,
+        key: { email: req.body.email },
+      });
+
+      user.password = await bcrypt.hash(req.body.password, 8);
+      await db.save(user);
+
+      res.status(200).send({ message: "Password Successfully Updated" });
     } catch (err) {
       console.log(err);
       res.status(500).send({ message: "Something went wrong" });

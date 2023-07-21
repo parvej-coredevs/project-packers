@@ -1,12 +1,13 @@
-import nodemailer from 'nodemailer';
+import nodemailer from "nodemailer";
 
 export default function NewTransport(options) {
   return nodemailer.createTransport({
-    host: options.SMTP_HOST,
-    port: options.SMTP_PORT,
+    // host: options.SMTP_HOST,
+    // port: options.SMTP_PORT,
+    service: "gmail",
     auth: {
       user: options.SMTP_USER,
-      pass: options.SMTP_PASSWORD
-    }
+      pass: options.SMTP_PASSWORD,
+    },
   });
 }

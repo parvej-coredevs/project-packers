@@ -52,4 +52,16 @@ export default function request() {
     checkRole(["admin"]),
     deleteRequest(this)
   );
+
+  /**
+   * GET /request/send-invoice
+   * @description This route is used for send product invoice. only admin can send this request
+   * @response {Object} 200 - success message
+   */
+  // this.route.get(
+  //   "/request/send-invoice",
+  //   auth,
+  //   checkRole(["admin"]),
+  //   sendProductInvoice(this)
+  // );
 }
