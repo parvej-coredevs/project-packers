@@ -1,21 +1,19 @@
 import Request from "../request/request.schema";
+import Product from '../product/product.schema'
 import fileDelete from "../../utils/fileDelete";
 import fileUpload from "../../utils/fileUpload";
 import randomId from "../../utils/randomId";
-import Order from "../order/order.schema";
+import mongoose from 'mongoose'
+const ObjectId = mongoose.Types.ObjectId
 /**
  * these set are use to validate the request item information
  */
-const createAllowed = new Set([
-  "productName",
-  "productLink",
-  "quantity",
-  "note",
-  "images",
-]);
+// const createAllowed = new Set({
+//   product: [],
+//   request: ["quantity", "note" ]
+// });
+// const createAllowed = new Map([]);
 const updateAllowed = new Set([
-  "productLink",
-  "productName",
   "quantity",
   "note",
   "status",
@@ -27,9 +25,10 @@ const updateAllowed = new Set([
   "aprox_delivery",
 ]);
 const allowedQuery = new Set([
-  "productName",
+  "user",
+  "requestId",
+  "product",
   "_id",
-  "price",
   "status",
   "search",
   "page",
@@ -49,23 +48,61 @@ export const create =
   async (req, res) => {
     try {
       // validate only alowed properties are inserted
-      const valid = Object.keys(req.body).every((k) => createAllowed.has(k));
-      if (!valid) return res.status(400).send("Bad request, Validation failed");
+      const validProduct = Object.keys(req.body.product).every((k) => new Set(['name', 'link', 'images']).has(k));
+      if (!validProduct) return res.status(400).send("Bad request, Validation failed");
+
+      const validRequest = Object.keys(req.body.request).every((k) => new Set(['quantity', 'note']).has(k));
+      if (!validRequest) return res.status(400).send("Bad request, Validation failed");
 
       // upload all products images
-      if (Object.keys(req.files).length > 0) {
-        req.body.images = await fileUpload(req.files.images, imageUp);
+      if (req?.files && Object.keys(req?.files).length > 0) {
+        req.body.product.images = await fileUpload(req.files.images, imageUp);
       }
+
+      // insert data in product table
+      const product = await db.create({
+        table: Product,
+        key: req.body.product,
+      })
+
       // insert data in request table
-      db.create({
+      const request = await db.create({
+        table: Request,
+        key: { requestId: randomId(), user: req.user._id, product: product._id, ...req.body.request },
+      })
+
+      res.status(200).send({ product, request });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).send("Internal server error");
+    }
+    };
+
+
+/**
+ * create existing product request
+ * @param { Object } db the db object for interacting with the database
+ * @param { Object } req the request object containing the properties of product
+ * @returns { Object } returns the existing product request object
+ */
+export const createExist =
+  ({ db, imageUp }) =>
+  async (req, res) => {
+    try {
+      // check product id is valid
+      if (!ObjectId.isValid(req.body.product)) return res.status(400).send("Invalid Product Id")
+
+      // validate only alowed properties are inserted
+      const valid = Object.keys(req.body).every((k) => new Set(['quantity', 'note', 'product']).has(k));
+      if (!valid) return res.status(400).send("Bad request, Validation failed");
+
+      // insert data in request table
+      const request = await db.create({
         table: Request,
         key: { requestId: randomId(), user: req.user._id, ...req.body },
       })
-        .then(async (request) => {
-          await db.save(request);
-          res.status(200).send(request);
-        })
-        .catch(({ message }) => res.status(400).send({ message }));
+
+      res.status(200).send(request);
     } catch (error) {
       console.log(error);
       return res.status(500).send("Internal server error");
@@ -87,7 +124,7 @@ export const getRequestItem =
         key: {
           allowedQuery,
           paginate: req.query.paginate === "true",
-          populate: { path: "user", select: "full_name email phone" },
+          populate: { path: "user product" },
         },
       })
         .then(async (request) => {
@@ -117,7 +154,7 @@ export const getSingleRequest =
         table: Request,
         key: {
           id: req.params.id,
-          populate: { path: "user" },
+          populate: { path: "user product" },
         },
       })
         .then(async (request) => {
@@ -162,16 +199,20 @@ export const updateRequest =
 
       // check if new files are uploaded then first delete previously uploaded product images and then upload new images
       if (Object.keys(req?.files).length > 0) {
-        await fileDelete(product.images);
-        req.body.images = await fileUpload(req.files?.images, imageUp);
+        await fileDelete(request.product.images);
+        const newImage = await fileUpload(req.files?.images, imageUp);
+        await db.update({
+          table: Product,
+          key: request.product._id,
+          body: { images: newImage }
+        })
       }
 
       db.update({
         table: Request,
-        key: { id: req.params.id, body: req.body },
+        key: { id: req.params.id, body: req.body, populate: { path: "user product" } },
       })
         .then((products) => {
-          // email a invoice send korte hobe
           res.status(200).send(products);
         })
         .catch((err) => {
@@ -194,14 +235,15 @@ export const deleteRequest =
   ({ db }) =>
   async (req, res) => {
     try {
-      const request = await db.remove({
+      db.remove({
         table: Request,
         key: { id: req.params.id },
-      });
-      if (!request)
-        return res.status(404).send({ messae: "Request Item does not exist" });
-      await fileDelete(request.images);
-      res.status(200).send({ message: "Deleted Successfully" });
+      }).then(request => {
+        res.status(200).send({ message: "Deleted Successfully", request });
+      }).catch(err => {
+        console.log(err);
+        res.status(400).send({ message: err.message })
+      })
     } catch (err) {
       console.log(err);
       res.status(500).send({ message: "Something went wrong" });

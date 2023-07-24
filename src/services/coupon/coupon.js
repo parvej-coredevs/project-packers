@@ -1,13 +1,20 @@
 import { auth, checkRole } from "../../services/middlewares.js";
 import {
+  couponApply,
   create,
   getCoupon,
-  getSingleRequest,
   updateCoupon,
   deleteCoupon,
 } from "./coupon.entity.js";
 
 export default function coupon() {
+  /**
+   * POST /coupn
+   * @description This route is used to create a new coupon.
+   * @response {Object} 201 - create new coupon
+   */
+  this.route.post("/coupon/apply", auth, couponApply(this));
+
   /**
    * POST /coupn
    * @description This route is used to create a new coupon.

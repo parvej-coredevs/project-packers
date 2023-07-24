@@ -12,33 +12,23 @@ const schema = new Schema(
       ref: "User",
       required: true,
     },
-    productLink: {
-      type: String,
-      required: true,
-    },
-    productName: {
-      type: String,
+    product: {
+      type: Schema.Types.ObjectId,
+      ref: "Product",
       required: true,
     },
     quantity: {
       type: Number,
       required: true,
     },
-    images: {
-      type: Array,
-      required: true,
+    note: {
+      type: String,
     },
     status: {
       type: String,
       required: true,
       enum: ["pending", "estimate-send", "closed", "abandoned"],
       default: "pending",
-    },
-    note: {
-      type: String,
-    },
-    aprox_delivery: {
-      type: String,
     },
     seller_takes: {
       type: Number,
@@ -55,6 +45,16 @@ const schema = new Schema(
     grandTotal: {
       type: Number,
     },
+    aprox_delivery: {
+      type: String,
+    },
+    couponApplied: {
+      type: Boolean,
+      default: false,
+    },
+    discountAmount: {
+      type: Number,
+    }
   },
   { versionKey: false, timestamps: true }
 );

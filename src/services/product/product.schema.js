@@ -1,5 +1,6 @@
 import { Schema, model } from "mongoose";
 import paginate from "mongoose-paginate-v2";
+import slugify from '../../utils/slugify';
 
 const schema = new Schema(
   {
@@ -9,58 +10,40 @@ const schema = new Schema(
       trim: true,
       maxlength: 200,
     },
-    description: {
+    slug: {
+      type: String,
+      // required: true,
+    },
+    link: {
       type: String,
       required: true,
-      trim: true,
+    },
+    from: {
+      type: String,
+    },
+    description: {
+      type: String,
       maxlength: 2000,
     },
-    tags: {
-      type: Array,
-      required: true,
-    },
-    category: {
+    category: [{
       type: Schema.Types.ObjectId,
       ref: "Category",
-      required: true,
-    },
+    }],
     sub_category: {
       type: Schema.Types.ObjectId,
       ref: "SubCategory",
-      required: true,
     },
-    images: [
-      {
-        type: String,
-      },
-    ],
+    tags: {
+      type: Array,
+    },
     price: {
       type: Number,
-      required: true,
     },
     comparePrice: {
       type: Number,
-      required: true,
-    },
-    productLink: {
-      type: String,
-      required: true,
-    },
-    productFrom: {
-      type: String,
-      required: true,
-    },
-    aprox_delivery: {
-      type: String,
-      required: true,
-    },
-    moneyback_gurante: {
-      type: String,
-      required: true,
     },
     stock: {
       type: Number,
-      required: true,
     },
     status: {
       type: String,
@@ -68,26 +51,12 @@ const schema = new Schema(
       enum: ["draft", "published", "archived"],
       default: "draft",
     },
-    seller_takes: {
-      type: Number,
-      required: true,
+    moneyback_gurante: {
+      type: Boolean,
     },
-    sales_taxs: {
-      type: Number,
-      required: true,
-    },
-    packers_fee: {
-      type: Number,
-      required: true,
-    },
-    shipping_fee: {
-      type: Number,
-      required: true,
-    },
-    grandTotal: {
-      type: Number,
-      required: true,
-    },
+    images: {
+      type: Array,
+    }
   },
   {
     timestamps: true,
@@ -96,5 +65,10 @@ const schema = new Schema(
 );
 
 schema.plugin(paginate);
+
+schema.pre("save", function (next) {
+  this.slug = slugify(this.name);
+  next();
+})
 
 export default model("Product", schema);

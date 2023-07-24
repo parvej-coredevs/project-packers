@@ -8,52 +8,46 @@ import fileUpload from "../../utils/fileUpload";
  */
 const createAllowed = new Set([
   "name",
+  "slug",
+  "link",
+  "from",
   "description",
   "category",
   "sub_category",
   "tags",
-  "images",
   "price",
   "comparePrice",
-  "productLink",
-  "productFrom",
-  "aprox_delivery",
-  "moneyback_gurante",
   "stock",
   "status",
-  "seller_takes",
-  "sales_taxs",
-  "packers_fee",
-  "shipping_fee",
-  "grandTotal",
+  "images",
+  "moneyback_gurante"
 ]);
 const updateAllowed = new Set([
   "name",
+  "slug",
+  "link",
+  "from",
   "description",
   "category",
   "sub_category",
   "tags",
-  "images",
   "price",
   "comparePrice",
-  "productLink",
-  "productFrom",
-  "aprox_delivery",
-  "moneyback_gurante",
   "stock",
   "status",
-  "seller_takes",
-  "sales_taxs",
-  "packers_fee",
-  "shipping_fee",
-  "grandTotal",
+  "images",
+  "moneyback_gurante"
 ]);
 const allowedQuery = new Set([
   "name",
+  "slug",
+  "link",
+  "from",
   "description",
+  "tags",
   "category",
   "sub_category",
-  "tags",
+  "price",
   "_id",
   "price",
   "status",
@@ -79,19 +73,15 @@ export const create =
       if (!valid) return res.status(400).send("Bad request");
 
       // upload all products images
-      if (req?.files)
-        req.body.images = await fileUpload(req.files.images, imageUp);
+      if (Object.keys(req?.files).length > 0) req.body.images = await fileUpload(req.files.images, imageUp);
 
       // insert data in product table
-      db.create({
+      const product = await db.create({
         table: Product,
         key: req.body,
       })
-        .then(async (product) => {
-          await db.save(product);
-          res.status(200).send(product);
-        })
-        .catch(({ message }) => res.status(400).send({ message }));
+
+      res.status(200).send(product)
     } catch (error) {
       console.log(error);
       return res.status(500).send("Internal server error");
@@ -108,36 +98,21 @@ export const getProduct =
   ({ db }) =>
   (req, res) => {
     try {
+      // const query = {};
+      // if (req.query?.search) query.search = req.query.search;
+      // if (req.query?.sortBy) query.sortBy = req.query.sortBy;
+      // if (req.query?.page) query.page = req.query.page;
+      // if (req.query?.limit) query.limit = req.query.limit;
+
       db.find({
         table: Product,
-        key: { allowedQuery, paginate: req.query.paginate === "true" },
-      })
-        .then(async (products) => {
-          // const token =
-          //   req.cookies[settings.token_key] ||
-          //   req.header("Authorization")?.replace("Bearer ", "");
-
-          // if (!token) {
-          //   console.log("in");
-          //   if (req.query.paginate !== "true") {
-          //     console.log("product", products);
-          //     products.map((item) => (item.productLink = undefined));
-          //   }
-          //   products.docs.map((item) => (item.productLink = undefined));
-          //   return res.status(200).send(products);
-          // }
-
-          // if (
-          //   (await decodeAuthToken(token)?.role) !== "admin" ||
-          //   "super-admin"
-          // ) {
-          //   if (req.query.paginate !== "true") {
-          //     products.map((item) => (item.productLink = undefined));
-          //   }
-          //   products.docs.map((item) => (item.productLink = undefined));
-          //   return res.status(200).send(products);
-          // }
-
+        key: {
+          allowedQuery,
+          paginate: req.query.paginate === "true",
+          populate: { path: "category sub_category", select: "name" },
+          query: req.query
+        },
+      }).then((products) => {
           res.status(200).send(products);
         })
         .catch((err) => {
@@ -162,7 +137,10 @@ export const getSingleProduct =
     try {
       db.findOne({
         table: Product,
-        key: { id: req.params.id },
+        key: {
+          id: req.params.id,
+          populate: { path: "category sub_category", select: "name" }
+        },
       })
         .then(async (products) => {
           res.status(200).send(products);
@@ -208,7 +186,7 @@ export const updateProduct =
 
       db.update({
         table: Product,
-        key: { id: req.params.id, body: req.body },
+        key: { id: req.params.id, body: req.body, populate: { path: "category sub_category", select: "name"} },
       })
         .then((products) => {
           res.status(200).send(products);
@@ -262,7 +240,7 @@ export const relatedProduct =
         key: {
           allowedQuery,
           paginate: true,
-          query: { ...req.query },
+          query: {...req.query, limit: 4},
         },
       })
         .then(async (products) => {

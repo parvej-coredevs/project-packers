@@ -1,4 +1,6 @@
 import Coupon from "../coupon/coupon.schema";
+import Product from '../product/product.schema'
+import Request from '../request/request.schema'
 /**
  * these set are use to validate the request item information
  */
@@ -34,6 +36,76 @@ const allowedQuery = new Set([
   "paginate",
 ]);
 
+/**
+ * apply coupon in user cart
+ * @param { Object } db the db object for interacting with the database
+ * @param { Object } req the request object containing the properties of product
+ * @returns { Object } returns the updated message
+ */
+export const couponApply =
+  ({ db }) =>
+  async (req, res) => {
+    try {
+      const coupon = await db.findOne({
+        table: Coupon,
+        key: {
+          code: req.body.code,
+        },
+      })
+      // check coupon is exist
+      if(!Object.keys(coupon).length > 0) return res.status(404).send("Invalid Coupon Code")
+
+      const requestItems = await Request.find({ user: req.user._id, status: "estimate-send" }).populate('user product')
+
+      if (!Object.keys(requestItems).length > 0) return res.status(404).send("Your are not eligible for applying coupon");
+
+      const eligibleItem = [];
+
+      for (let couponCategory of coupon.validCategory) {
+
+        for (let requestItem of requestItems) {
+
+          requestItem.product.category.forEach(productCat => {
+
+            if (productCat.toString() === couponCategory.toString()) {
+
+              if (requestItem.couponApplied) {
+                return res.status(400).send("You have already applied this coupon");
+              }
+
+              eligibleItem.push(requestItem)
+
+              // requestItem.discountAmount = getDiscountAmount(coupon, requestItem.product.price)
+              // requestItem.couponApplied = true;
+
+            }
+          })
+        }
+      }
+
+
+
+      res.send({requestItems, eligibleItem})
+    } catch (error) {
+      console.log(error);
+      res.status(500).send("Internal server error");
+    }
+  };
+
+function getDiscountAmount(coupon, itemprice) {
+    let discountAmount = 0;
+    switch (coupon.type) {
+      case "fixed":
+        discountAmount = coupon.amount;
+        break;
+      case "percentage":
+        discountAmount = (coupon.amount / 100) * itemprice;
+        break;
+      default:
+        break;
+    }
+    return discountAmount;
+  }
 /**
  * create new coupon
  * @param { Object } db the db object for interacting with the database

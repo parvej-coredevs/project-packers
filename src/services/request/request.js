@@ -1,6 +1,7 @@
 import { auth, checkRole } from "../../services/middlewares.js";
 import {
   create,
+  createExist,
   getRequestItem,
   getSingleRequest,
   updateRequest,
@@ -9,11 +10,18 @@ import {
 
 export default function request() {
   /**
-   * POST /request
-   * @description This route is used to create a product request.
-   * @response {Object} 201 - create new item request
+   * POST /request/new-item
+   * @description This route is used to create a new product request.
+   * @response {Object} 201 - create new product request
    */
-  this.route.post("/request", auth, create(this));
+  this.route.post("/request/new-item", auth, create(this));
+
+   /**
+   * POST /request/exist-item
+   * @description This route is used to create a existing product request.
+   * @response {Object} 201 - create a existing product request
+   */
+  this.route.post("/request/exist-item", auth, createExist(this));
 
   /**
    * GET /request
