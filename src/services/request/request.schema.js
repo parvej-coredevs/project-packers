@@ -39,12 +39,12 @@ const schema = new Schema(
     packers_fee: {
       type: Number,
     },
-    shipping_fee: {
-      type: Number,
-    },
-    grandTotal: {
-      type: Number,
-    },
+    // shipping_fee: {
+    //   type: Number,
+    // },
+    // grandTotal: {
+    //   type: Number,
+    // },
     aprox_delivery: {
       type: String,
     },

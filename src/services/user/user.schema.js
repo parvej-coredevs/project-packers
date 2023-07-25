@@ -1,26 +1,6 @@
 import { Schema, model } from "mongoose";
 import paginate from "mongoose-paginate-v2";
 
-const shippingAddress = new Schema({
-  firstName: { type: String },
-  lastName: { type: String },
-  address: { type: String },
-  city: { type: String },
-  state: { type: String },
-  country: { type: String },
-  zip: { type: String },
-});
-
-const billingAddress = new Schema({
-  firstName: { type: String },
-  lastName: { type: String },
-  address: { type: String },
-  city: { type: String },
-  state: { type: String },
-  country: { type: String },
-  zip: { type: String },
-});
-
 const schema = new Schema(
   {
     full_name: { type: String, required: true },
@@ -35,8 +15,14 @@ const schema = new Schema(
     password: { type: String, required: true },
     phone: { type: String },
     status: { type: String, enum: ["active", "deactive"] },
-    shippingAddress: shippingAddress,
-    billingAddress: billingAddress,
+    shippingAddress: {
+      type: Schema.Types.ObjectId,
+      ref: "shippingAddress",
+    },
+    billingAddress: {
+      type: Schema.Types.ObjectId,
+      ref: "billingAddress",
+    },
   },
   { timestamps: true, versionKey: false }
 );

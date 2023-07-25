@@ -2,6 +2,8 @@ import { auth, checkRole } from "../../services/middlewares.js";
 import {
   create,
   createExist,
+  requestCheckout,
+  initiatePaymentCheckout,
   getRequestItem,
   getSingleRequest,
   updateRequest,
@@ -16,12 +18,26 @@ export default function request() {
    */
   this.route.post("/request/new-item", auth, create(this));
 
-   /**
+  /**
    * POST /request/exist-item
    * @description This route is used to create a existing product request.
    * @response {Object} 201 - create a existing product request
    */
   this.route.post("/request/exist-item", auth, createExist(this));
+
+  /**
+   * POST /request/checkout
+   * @description This route is used for request to get chekcout information.
+   * @response {Object} 201 - create a existing product request
+   */
+  this.route.get("/request/checkout", auth, requestCheckout(this));
+
+  /**
+   * POST /initiate-checkout
+   * @description This route is used for initiate-checkout.
+   * @response {Object} 201 - create a existing product request
+   */
+  this.route.post("/initiate-checkout", auth, initiatePaymentCheckout(this));
 
   /**
    * GET /request

@@ -11,5 +11,7 @@
   "MONGODB_URL": "mongodb+srv://parvejhossain:parvejhossain@cluster0.jkdxpyh.mongodb.net/projectpacker",
   "token_secret": "ywaierh3294209",
   "token_key": "token",
-  "reset_pass_secret": "yuaslkfjlksadfoewjff"
+  "reset_pass_secret": "yuaslkfjlksadfoewjff",
+  "store_id": "cored64bf7afe242ad",
+  "store_password": "cored64bf7afe242ad@ssl"
 }

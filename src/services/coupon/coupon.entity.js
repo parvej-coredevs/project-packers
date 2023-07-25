@@ -59,8 +59,6 @@ export const couponApply =
 
       if (!Object.keys(requestItems).length > 0) return res.status(404).send("Your are not eligible for applying coupon");
 
-      const eligibleItem = [];
-
       for (let couponCategory of coupon.validCategory) {
 
         for (let requestItem of requestItems) {
@@ -73,10 +71,9 @@ export const couponApply =
                 return res.status(400).send("You have already applied this coupon");
               }
 
-              eligibleItem.push(requestItem)
-
-              // requestItem.discountAmount = getDiscountAmount(coupon, requestItem.product.price)
-              // requestItem.couponApplied = true;
+              requestItem.discountAmount = getDiscountAmount(coupon, requestItem.product.price)
+              requestItem.couponApplied = true;
+              requestItem.save();
 
             }
           })
@@ -84,8 +81,7 @@ export const couponApply =
       }
 
 
-
-      res.send({requestItems, eligibleItem})
+      res.send(requestItems)
     } catch (error) {
       console.log(error);
       res.status(500).send("Internal server error");
