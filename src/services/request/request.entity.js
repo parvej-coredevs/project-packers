@@ -7,6 +7,9 @@ import mongoose from "mongoose";
 import User from "../user/user.schema";
 import shippingAddress from "../user/shipping.schema";
 import trxId from "../../utils/trxId";
+import Payment from "../payment/payment.schema";
+import Order from "../order/order.schema";
+
 const ObjectId = mongoose.Types.ObjectId;
 
 /**
@@ -154,7 +157,7 @@ export const requestCheckout = () => async (req, res) => {
  * @returns { Object } returns the existing product request object
  */
 export const initiatePaymentCheckout =
-  ({ db, payment }) =>
+  ({ db, payment, settings }) =>
   async (req, res) => {
     try {
       // add shipping address
@@ -176,28 +179,35 @@ export const initiatePaymentCheckout =
         match: { user: req.user._id, status: "estimate-send" },
       });
 
+      const orderItems = [];
+      request.forEach((Item) => {
+        orderItems.push(Item._id);
+      });
+
       // calculate total amount
       const totalAmmount =
         request.reduce((total, item) => total + item.totalAmmount, 0) +
         (req.body.inside_dhaka ? 100 : 150);
 
+      // console.log(request[0]);
+
       // initiate payment
-      const paymentData = await payment.initiatePayment({
+      const paymentData = await payment.init({
         total_amount: totalAmmount,
         currency: "BDT",
         tran_id: "trxId()",
         product_category: "General",
-        success_url: "success.html",
-        cancel_url: "cancel.html",
-        fail_url: "fail.html",
-        ipn_url: `${process.env.CLIENT_URL}/checkout/ipn`,
+        success_url: `${settings.hosturl}/checkout-success`,
+        cancel_url: `${settings.hosturl}/checkout-cancel`,
+        fail_url: `${settings.hosturl}/checkout-fail`,
+        ipn_url: `checkout/ipn`,
         product_name: request[0].product.name || "",
         product_category: "General",
         product_profile: "General",
         cus_name: request[0].user.full_name || "",
         cus_email: request[0].user.email || "",
         cus_add1: request[0].user.shippingAddress.address || "",
-        cus_city: request[0].user.shippingAddress.cit || "",
+        cus_city: request[0].user.shippingAddress.city || "",
         cus_state: request[0].user.shippingAddress.area || "",
         cus_postcode: request[0].user.shippingAddress.zip || "",
         cus_country: request[0].user.shippingAddress.city || "",
@@ -208,20 +218,91 @@ export const initiatePaymentCheckout =
         ship_add2: "Dhaka",
         ship_city: "Dhaka",
         ship_state: "Dhaka",
-        ship_postcode: 1000,
+        ship_postcode: 100000,
         ship_country: "Bangladesh",
-        // value_a: user,
-        // value_b: note,
-        // value_c: email,
+        value_a: req.user._id.toString(),
+        value_b: req.body.note,
+        value_c: JSON.stringify(orderItems),
       });
 
-      console.log(paymentData);
-
-      res.status(200).send({ paymentData, request });
+      res.status(200).send({ url: paymentData.GatewayPageURL });
     } catch (error) {
       console.log(error);
       return res.status(500).send("Internal server error");
     }
+  };
+
+/**
+ * payment success callback
+ * @param { Object } payment the payment object interacting with payment related operations
+ * @param { Object } req the request object containing the properties when user successfully payment
+ * @returns { Object } returns the existing product request object
+ */
+export const checkoutSuccess =
+  ({ db, payment }) =>
+  async (req, res) => {
+    // console.log("success data", req.body);
+    const validate = await payment.validate({ val_id: req.body.val_id });
+    // console.log("validated", validate);
+
+    const paymentData = await db.create({
+      table: Payment,
+      key: {
+        user: validate.value_a,
+        valid_id: validate.val_id,
+        amount: validate.amount,
+        bank_tran_id: validate.bank_tran_id,
+        paymentMethod: validate.card_type,
+        paymentStatus:
+          validate.status === "VALID" || "VALIDATED" ? "Paid" : "Unpaid",
+        transactionId: validate.tran_id,
+        transactionDate: validate.tran_date,
+      },
+    });
+
+    const order = await db.create({
+      table: Order,
+      key: {
+        user: validate.value_a,
+        payment: paymentData._id,
+        items: JSON.parse(validate.value_c),
+        orderId: randomId(),
+        note: validate.value_b,
+      },
+    });
+
+    paymentData.order = order._id;
+    db.save(paymentData);
+
+    if (validate.status === "VALID" || "VALIDATED") {
+      return res.redirect("https://google.com"); // redirect to success page
+    }
+
+    res.redirect("https://google.com"); // redirect to fail page
+  };
+
+/**
+ * payment fail callback
+ * @param { Object } payment the payment object interacting with payment related operations
+ * @param { Object } req the request object containing the properties when user payment is failed
+ * @returns { Object } returns the existing product request object
+ */
+export const checkoutFail =
+  ({ payment }) =>
+  async (req, res) => {
+    console.log("fail data", req.body);
+  };
+
+/**
+ * payment cancel callback
+ * @param { Object } payment the payment object interacting with payment related operations
+ * @param { Object } req the request object containing the properties when user payment is cancelled
+ * @returns { Object } returns the existing product request object
+ */
+export const checkoutCancel =
+  ({ payment }) =>
+  async (req, res) => {
+    console.log("cancel data", req.body);
   };
 
 /**
@@ -262,6 +343,17 @@ export async function getUserCheckoutInfo({ Table, match }) {
     },
     {
       $unwind: "$user",
+    },
+    {
+      $lookup: {
+        from: "shippingaddresses",
+        localField: "user.shippingAddress",
+        foreignField: "_id",
+        as: "user.shippingAddress",
+      },
+    },
+    {
+      $unwind: "$user.shippingAddress",
     },
     {
       $addFields: {
@@ -352,7 +444,10 @@ export const getSingleRequest =
         table: Request,
         key: {
           id: req.params.id,
-          populate: { path: "user product" },
+          populate: {
+            path: "user product",
+            populate: { path: "user.shippingAddress product.category" },
+          },
         },
       })
         .then(async (request) => {

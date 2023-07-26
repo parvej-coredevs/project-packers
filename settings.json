@@ -1,5 +1,5 @@
 {
-  "port": 4000,
+  "port": 8000,
   "origin": [],
   "useHTTP2": false,
   "SMTP_HOST": "",
@@ -13,5 +13,6 @@
   "token_key": "token",
   "reset_pass_secret": "yuaslkfjlksadfoewjff",
   "store_id": "cored64bf7afe242ad",
-  "store_password": "cored64bf7afe242ad@ssl"
+  "store_password": "cored64bf7afe242ad@ssl",
+  "hosturl": "http://localhost:8000/api"
 }

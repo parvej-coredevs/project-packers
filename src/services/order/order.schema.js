@@ -1,41 +1,48 @@
 import { Schema, model } from "mongoose";
-
-const schema = new Schema({
-  user: {
-    type: Schema.Types.ObjectId,
-    ref: "User",
-  },
-  paymentId: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  orderNumber: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  items: [
-    {
+import paginate from "mongoose-paginate-v2";
+const schema = new Schema(
+  {
+    user: {
       type: Schema.Types.ObjectId,
-      ref: "Product",
+      ref: "User",
+    },
+    payment: {
+      type: Schema.Types.ObjectId,
+      ref: "Payment",
+    },
+    orderId: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    items: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Request",
+      },
+    ],
+    status: {
+      type: String,
+      required: true,
+      enum: ["pending", "processing", "shipping", "completed", "canceld"],
+      default: "pending",
+    },
+    deliveryDate: {
+      form: {
+        type: Date,
+      },
+      to: {
+        type: Date,
+      },
+    },
+    note: {
+      type: String,
       required: true,
     },
-  ],
-  status: {
-    type: String,
-    required: true,
-    enum: ["pending", "processing", "shipping", "completed", "canceld"],
-    default: "pending",
   },
-  deliveryLastDate: {
-    type: Date,
-    required: true,
-  },
-  note: {
-    type: String,
-    required: true,
-  },
-});
+  { versionKey: false, timestamps: true }
+);
+
+schema.plugin(paginate);
 
 export default model("Order", schema);

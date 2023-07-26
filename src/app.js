@@ -19,7 +19,7 @@ import { services } from "./services";
 import socket, { listen as wsListen } from "./controllers/socket";
 import SearchCtrl from "./controllers/search/search";
 import NewMailer from "./controllers/email";
-import Payment from "../src/library/ssl-commerze";
+import Payment from "sslcommerz-lts";
 import * as operations from "./controllers/operations";
 
 // Settings

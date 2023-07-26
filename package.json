@@ -34,6 +34,7 @@
     "slugify": "^1.6.6",
     "socket.io": "^4.6.1",
     "spdy": "^4.0.2",
+    "sslcommerz-lts": "^1.1.0",
     "web-push": "^3.5.0"
   },
   "devDependencies": {

@@ -46,7 +46,12 @@ const schema = new Schema(
     //   type: Number,
     // },
     aprox_delivery: {
-      type: String,
+      form: {
+        type: Date,
+      },
+      to: {
+        type: Date,
+      },
     },
     couponApplied: {
       type: Boolean,
@@ -54,7 +59,7 @@ const schema = new Schema(
     },
     discountAmount: {
       type: Number,
-    }
+    },
   },
   { versionKey: false, timestamps: true }
 );
