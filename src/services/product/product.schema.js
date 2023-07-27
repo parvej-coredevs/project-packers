@@ -1,6 +1,7 @@
 import { Schema, model } from "mongoose";
 import paginate from "mongoose-paginate-v2";
-import slugify from '../../utils/slugify';
+import autopopulate from "mongoose-autopopulate";
+import slugify from "../../utils/slugify";
 
 const schema = new Schema(
   {
@@ -12,7 +13,7 @@ const schema = new Schema(
     },
     slug: {
       type: String,
-      // required: true,
+      unique: true,
     },
     link: {
       type: String,
@@ -25,14 +26,17 @@ const schema = new Schema(
       type: String,
       maxlength: 2000,
     },
-    category: [{
-      type: Schema.Types.ObjectId,
-      ref: "Category",
-    }],
-    sub_category: {
-      type: Schema.Types.ObjectId,
-      ref: "SubCategory",
-    },
+    // category: [{
+    //   type: Schema.Types.ObjectId,
+    //   ref: "Category",
+    // }],
+    sub_category: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "SubCategory",
+        autopopulate: true,
+      },
+    ],
     tags: {
       type: Array,
     },
@@ -56,7 +60,7 @@ const schema = new Schema(
     },
     images: {
       type: Array,
-    }
+    },
   },
   {
     timestamps: true,
@@ -65,10 +69,11 @@ const schema = new Schema(
 );
 
 schema.plugin(paginate);
+schema.plugin(autopopulate);
 
 schema.pre("save", function (next) {
   this.slug = slugify(this.name);
   next();
-})
+});
 
 export default model("Product", schema);

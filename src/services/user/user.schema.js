@@ -1,5 +1,6 @@
 import { Schema, model } from "mongoose";
 import paginate from "mongoose-paginate-v2";
+import autopopulate from "mongoose-autopopulate";
 
 const schema = new Schema(
   {
@@ -18,16 +19,20 @@ const schema = new Schema(
     shippingAddress: {
       type: Schema.Types.ObjectId,
       ref: "shippingAddress",
+      autopopulate: true,
     },
     billingAddress: {
       type: Schema.Types.ObjectId,
       ref: "billingAddress",
+      autopopulate: true,
     },
   },
   { timestamps: true, versionKey: false }
 );
 
 schema.plugin(paginate);
+schema.plugin(autopopulate);
+
 schema.methods.toJSON = function () {
   const obj = this.toObject();
   delete obj.__v;

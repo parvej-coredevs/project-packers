@@ -29,9 +29,10 @@ export default function request() {
   this.route.post("/request/exist-item", auth, createExist(this));
 
   /**
-   * POST /request/checkout
-   * @description This route is used for request to get chekcout information.
-   * @response {Object} 201 - create a existing product request
+   * GET /request/checkout
+   * @description This route is used for request cart item. when admin send requested product estimate and cost then user can see this product
+   * in their checkout cart page
+   * @response {Object} 200 - get requested cart item.
    */
   this.route.get("/request/checkout", auth, requestCheckout(this));
 
@@ -62,17 +63,22 @@ export default function request() {
 
   /**
    * GET /request
-   * @description This route is used to find request item.
+   * @description This route is used to find all request item.
    * @response {Object} 200 - request list
    */
-  this.route.get("/request", auth, getRequestItem(this));
+  this.route.get("/request", auth, checkRole(["admin"]), getRequestItem(this));
 
   /**
    * GET /request/:id
    * @description This route is used to find single request item.
    * @response {Object} 200 - single request item object
    */
-  this.route.get("/request/:id", auth, getSingleRequest(this));
+  this.route.get(
+    "/request/:id",
+    auth,
+    checkRole(["admin"]),
+    getSingleRequest(this)
+  );
 
   /**
    * PATCH /request/:id

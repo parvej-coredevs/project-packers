@@ -1,6 +1,7 @@
-export default async function (db, table, key) {
+export default async function (table, query) {
   try {
-    const data = await db.findOne({ table, key });
+    const data = await table.findOne(query);
+    console.log("data", data);
     if (data !== null || undefined) {
       return true;
     }

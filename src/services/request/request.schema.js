@@ -1,5 +1,6 @@
 import { model, Schema } from "mongoose";
 import paginate from "mongoose-paginate-v2";
+import autopopulate from "mongoose-autopopulate";
 
 const schema = new Schema(
   {
@@ -11,11 +12,13 @@ const schema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      autopopulate: true,
     },
     product: {
       type: Schema.Types.ObjectId,
       ref: "Product",
       required: true,
+      autopopulate: true,
     },
     quantity: {
       type: Number,
@@ -65,5 +68,6 @@ const schema = new Schema(
 );
 
 schema.plugin(paginate);
+schema.plugin(autopopulate);
 
 export default model("Request", schema);

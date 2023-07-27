@@ -5664,12 +5664,17 @@ mongodb@4.16.0:
     "@aws-sdk/credential-providers" "^3.186.0"
     saslprep "^1.0.3"
 
+mongoose-autopopulate@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.npmjs.org/mongoose-autopopulate/-/mongoose-autopopulate-1.0.1.tgz"
+  integrity sha512-39rN0QQinA1iz/8JNVKM3MNq/zZrjStiWi8jA15diUC2nnJsvEgRXEir4L4D1azYxY+gBTuqEzLqd7Y+MC6pHQ==
+
 mongoose-paginate-v2@^1.7.1:
   version "1.7.1"
   resolved "https://registry.npmjs.org/mongoose-paginate-v2/-/mongoose-paginate-v2-1.7.1.tgz"
   integrity sha512-J8DJw3zRXcXOKoZv+RvO9tt5HotRnbo2iCR3lke+TtsQsYwQvbY3EgUkPqZXw6qCX2IByvXrW5SGNdAB0od/Cw==
 
-mongoose@^6.8.4:
+mongoose@^6.8.4, "mongoose@6.x || 7.x":
   version "6.11.2"
   resolved "https://registry.npmjs.org/mongoose/-/mongoose-6.11.2.tgz"
   integrity sha512-BJHQerozE+qIVdH8Hn9niMVMUzRNcjmwU7hFEzER1+aYtGmVJgGsXBd9wJ9GnrHrbCsYmKlRy8aTuxEdlEtfow==

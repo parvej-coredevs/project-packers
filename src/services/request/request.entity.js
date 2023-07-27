@@ -21,6 +21,8 @@ const ObjectId = mongoose.Types.ObjectId;
 // });
 // const createAllowed = new Map([]);
 const updateAllowed = new Set([
+  "link",
+  "images",
   "quantity",
   "note",
   "status",
@@ -315,47 +317,6 @@ export async function getUserCheckoutInfo({ Table, match }) {
   return await Table.aggregate([
     { $match: { ...match } },
     {
-      $lookup: {
-        from: "products",
-        localField: "product",
-        foreignField: "_id",
-        as: "product",
-      },
-    },
-    {
-      $unwind: "$product",
-    },
-    {
-      $lookup: {
-        from: "categories",
-        localField: "product.category",
-        foreignField: "_id",
-        as: "product.category",
-      },
-    },
-    {
-      $lookup: {
-        from: "users",
-        localField: "user",
-        foreignField: "_id",
-        as: "user",
-      },
-    },
-    {
-      $unwind: "$user",
-    },
-    {
-      $lookup: {
-        from: "shippingaddresses",
-        localField: "user.shippingAddress",
-        foreignField: "_id",
-        as: "user.shippingAddress",
-      },
-    },
-    {
-      $unwind: "$user.shippingAddress",
-    },
-    {
       $addFields: {
         productPrice: {
           $multiply: ["$product.price", "$quantity"],
@@ -379,21 +340,21 @@ export async function getUserCheckoutInfo({ Table, match }) {
       $project: {
         requestId: 1,
         "user.full_name": 1,
-        "user.email": 1,
-        "user.phone": 1,
-        "user.shippingAddress": 1,
+        // "user.email": 1,
+        // "user.phone": 1,
+        // "user.shippingAddress": 1,
         "product.name": 1,
-        "product.price": 1,
+        // "product.price": 1,
         "product.images": 1,
-        "product.category.name": 1,
-        quantity: 1,
-        aprox_delivery: 1,
-        totalAmmount: 1,
-        productPrice: 1,
-        packers_fee: 1,
-        sales_taxs: 1,
-        seller_takes: 1,
-        discountAmount: 1,
+        // "product.category.name": 1,
+        // quantity: 1,
+        // aprox_delivery: 1,
+        // totalAmmount: 1,
+        // productPrice: 1,
+        // packers_fee: 1,
+        // sales_taxs: 1,
+        // seller_takes: 1,
+        // discountAmount: 1,
       },
     },
   ]);
@@ -414,7 +375,6 @@ export const getRequestItem =
         key: {
           allowedQuery,
           paginate: req.query.paginate === "true",
-          populate: { path: "user product" },
         },
       })
         .then(async (request) => {
@@ -444,18 +404,11 @@ export const getSingleRequest =
         table: Request,
         key: {
           id: req.params.id,
-          populate: {
-            path: "user product",
-            populate: { path: "user.shippingAddress product.category" },
-          },
         },
       })
         .then(async (request) => {
-          // const order = await db.find({
-          //   table: Order,
-          //   key: { id: req.user.id },
-          // });
-          res.status(200).send(request);
+          const order = await Order.countDocuments({ id: request.user.id });
+          res.status(200).send({ request, order });
         })
         .catch((err) => {
           console.error(err);
@@ -490,23 +443,29 @@ export const updateRequest =
       // check request is exist
       if (!request) return res.status(404).send("Invalid Request ID");
 
-      // check if new files are uploaded then first delete previously uploaded product images and then upload new images
-      if (Object.keys(req?.files).length > 0) {
-        await fileDelete(request.product.images);
+      // find the reqyuested product
+      let product = await db.findOne({
+        table: Product,
+        key: { id: request.product._id },
+      });
+
+      // check if new files are uploaded then upload new images and update updatebase
+      if (req?.files && Object.keys(req?.files).length > 0) {
         const newImage = await fileUpload(req.files?.images, imageUp);
-        await db.update({
-          table: Product,
-          key: request.product._id,
-          body: { images: newImage },
-        });
+        product.images.push(newImage);
       }
+
+      if (req.body.link) {
+        product.link = req.body.link;
+        delete req.body.link;
+      }
+      db.save(product);
 
       db.update({
         table: Request,
         key: {
           id: req.params.id,
           body: req.body,
-          populate: { path: "user product" },
         },
       })
         .then((products) => {

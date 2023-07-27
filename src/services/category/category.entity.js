@@ -7,7 +7,15 @@ import checkAssociation from "../../utils/checkAssociation";
  * these set are use to validate the category name
  */
 const createAllowed = new Set(["name", "slug"]);
-const allowedQuery = new Set(["name", "slug"]);
+const allowedQuery = new Set([
+  "name",
+  "slug",
+  "search",
+  "page",
+  "limit",
+  "id",
+  "paginate",
+]);
 
 /**
  * create a new category
@@ -27,6 +35,33 @@ export const create =
         .then(async (category) => {
           await db.save(category);
           res.status(201).send(category);
+        })
+        .catch((err) => {
+          console.error(err);
+          res.status(500).send("Something went wrong");
+        });
+    } catch (error) {
+      console.error(error);
+      res.status(500).send("Something went wrong");
+    }
+  };
+
+/**
+ * get single categories
+ * @param { Object } db the db object for interacting with the database
+ * @param { Object } req the request object containing the properties of category
+ * @returns { Object } returns the single category
+ */
+export const singleCategory =
+  ({ db }) =>
+  (req, res) => {
+    try {
+      db.findOne({
+        table: Category,
+        key: { slug: req.params.slug },
+      })
+        .then((category) => {
+          res.status(200).json(category);
         })
         .catch((err) => {
           console.error(err);
@@ -77,10 +112,10 @@ export const updateCategory =
     try {
       const category = await db.findOne({
         table: Category,
-        key: { id: req.params.id },
+        key: { slug: req.params.slug },
       });
       if (!category)
-        return res.status(400).send("Bad request, Invalid Category ID");
+        return res.status(400).send("Bad request, Invalid Category");
       category.name = req.body.name;
       await db.save(category);
       res.status(200).send(category);
@@ -91,7 +126,7 @@ export const updateCategory =
   };
 
 /**
- * This function is used update a category by admin.
+ * This function is used delete a category by admin.
  * @param {Object} req This is the request object.
  * @param {Object} res this is the response object
  * @returns It returns the updated category data.
@@ -100,19 +135,20 @@ export const deleteCategory =
   ({ db }) =>
   async (req, res) => {
     try {
-      let check = await checkAssociation(db, Product, {
-        category: req.params.id,
-      });
+      // let check = await checkAssociation(db, Product, {
+      //   category: req.params.id,
+      // });
 
-      if (check)
-        return res
-          .status(400)
-          .send("Can't delete product, This category associated with Product");
+      // if (check)
+      //   return res
+      //     .status(400)
+      //     .send("Can't delete product, This category associated with Product");
 
       let category = await db.remove({
         table: Category,
-        key: { id: req.params.id },
+        key: { slug: req.params.slug },
       });
+      console.log(category);
       if (!category)
         return res.status(404).send({ messae: "Category not found" });
       res.status(200).send({ message: "Deleted Successfully" });
@@ -148,20 +184,48 @@ export const createSubCategory =
   };
 
 /**
+ * get single categories
+ * @param { Object } db the db object for interacting with the database
+ * @param { Object } req the request object containing the properties of category
+ * @returns { Object } returns the single category
+ */
+export const singleSubCategory =
+  ({ db }) =>
+  (req, res) => {
+    try {
+      db.findOne({
+        table: SubCategory,
+        key: { slug: req.params.slug },
+      })
+        .then((category) => {
+          res.status(200).json(category);
+        })
+        .catch((err) => {
+          console.error(err);
+          res.status(500).send("Something went wrong");
+        });
+    } catch (error) {
+      console.error(error);
+      res.status(500).send("Something went wrong");
+    }
+  };
+
+/**
  * get all sub categories
  * @param { Object } db the db object for interacting with the database
  * @param { Object } req the request object containing the properties of category
- * @returns { Object } returns the new category including name
+ * @returns { Object } returns the category list
  */
 export const getSubCategory =
   ({ db }) =>
   (req, res) => {
     try {
+      console.log(req.query);
       db.find({
         table: SubCategory,
         key: {
           paginate: req.query.paginate === "true",
-          populate: { path: "parentCat", select: "name" },
+          populate: { path: "parentCat", select: "name slug" },
         },
       })
         .then(async (categories) => {
@@ -178,10 +242,10 @@ export const getSubCategory =
   };
 
 /**
- * This function is used update a category by admin.
+ * This function is used update a sub category by admin.
  * @param {Object} req This is the request object.
  * @param {Object} res this is the response object
- * @returns It returns the updated category data.
+ * @returns It returns the updated sub category data.
  */
 export const updateSubCategory =
   ({ db }) =>
@@ -190,7 +254,7 @@ export const updateSubCategory =
       const result = await db.update({
         table: SubCategory,
         key: {
-          id: req.params.id,
+          slug: req.params.slug,
           body: req.body,
         },
       });
@@ -211,15 +275,15 @@ export const deleteSubCategory =
   ({ db }) =>
   async (req, res) => {
     try {
-      let check = await checkAssociation(db, Product, {
-        sub_category: req.params.id,
-      });
+      // let check = await checkAssociation(Product, {
+      //   sub_category: req.params.id,
+      // });
 
-      if (check)
-        return res.status(400).send({
-          message:
-            "Can't delete product, This sub category associated with Product",
-        });
+      // if (check)
+      //   return res.status(400).send({
+      //     message:
+      //       "Can't delete product, This sub category associated with Product",
+      //   });
 
       let category = await db.remove({
         table: SubCategory,

@@ -24,19 +24,19 @@ export default function product() {
   this.route.get("/products", getProduct(this));
 
   /**
-   * GET /products/:id
+   * GET /products/:slug
    * @description This route is used to find single product.
    * @response {Object} 200 - single product object
    */
-  this.route.get("/products/:id", getSingleProduct(this));
+  this.route.get("/products/:slug", getSingleProduct(this));
 
   /**
-   * PATCH /products/:id
+   * PATCH /products/:slug
    * @description This route is used for update product. only admin can update products
    * @response {Object} 200 - updated product object
    */
   this.route.patch(
-    "/products/:id",
+    "/products/:slug",
     auth,
     checkRole(["admin"]),
     updateProduct(this)

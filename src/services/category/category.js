@@ -2,9 +2,11 @@ import { checkRole, auth } from "../middlewares";
 import {
   create,
   getCategory,
+  singleCategory,
   updateCategory,
   deleteCategory,
   createSubCategory,
+  singleSubCategory,
   getSubCategory,
   updateSubCategory,
   deleteSubCategory,
@@ -19,6 +21,13 @@ export default function category() {
   this.route.post("/category", auth, checkRole(["admin"]), create(this));
 
   /**
+   * GET /category/:slug
+   * @description This route is used get single category.
+   * @returns {Object} 200 - single category.
+   */
+  this.route.get("/category/:slug", singleCategory(this));
+
+  /**
    * GET /category
    * @description This route is used for get all category.
    * @returns {Object} 200 - all category list.
@@ -26,12 +35,12 @@ export default function category() {
   this.route.get("/category", getCategory(this));
 
   /**
-   * PATCH /category/:id/edit
+   * PATCH /category/:slug
    * @description This route is used for update category.
    * @returns {Object} 200 - get update category.
    */
   this.route.patch(
-    "/category/:id/edit",
+    "/category/:slug",
     auth,
     checkRole(["admin"]),
     updateCategory(this)
@@ -43,11 +52,13 @@ export default function category() {
    * @returns {Object} 200 - success message
    */
   this.route.delete(
-    "/category/:id",
+    "/category/:slug",
     auth,
     checkRole(["admin"]),
     deleteCategory(this)
   );
+
+  // Statr Sub Category
 
   /**
    * POST /sub-category
@@ -60,6 +71,12 @@ export default function category() {
     checkRole(["admin"]),
     createSubCategory(this)
   );
+  /**
+   * GET /sub-category/:slug
+   * @description This route is used get single sub category.
+   * @returns {Object} 200 - single slug category.
+   */
+  this.route.get("/sub-category/:slug", singleSubCategory(this));
 
   /**
    * GET /sub-category
@@ -69,12 +86,12 @@ export default function category() {
   this.route.get("/sub-category", getSubCategory(this));
 
   /**
-   * PATCH /sub-category/:id/edit
+   * PATCH /sub-category/:slug
    * @description This route is used for update sub-category.
    * @returns {Object} 200 - get update sub-category.
    */
   this.route.patch(
-    "/sub-category/:id/edit",
+    "/sub-category/:slug",
     auth,
     checkRole(["admin"]),
     updateSubCategory(this)
