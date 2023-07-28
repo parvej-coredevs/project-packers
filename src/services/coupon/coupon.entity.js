@@ -1,28 +1,29 @@
 import Coupon from "../coupon/coupon.schema";
-import Product from '../product/product.schema'
-import Request from '../request/request.schema'
+import Product from "../product/product.schema";
+import Request from "../request/request.schema";
+import { getUserCheckoutInfo } from "../request/request.entity";
 /**
  * these set are use to validate the request item information
  */
 const createAllowed = new Set([
   "code",
-  "type",
-  "amount",
   "description",
+  "type",
+  "minPurchase",
+  "amount",
   "limit",
   "expireDate",
   "validCategory",
-  "validSubCategory",
 ]);
 const updateAllowed = new Set([
   "code",
-  "type",
-  "amount",
   "description",
+  "type",
+  "minPurchase",
+  "amount",
   "limit",
   "expireDate",
   "validCategory",
-  "validSubCategory",
 ]);
 const allowedQuery = new Set([
   "code",
@@ -51,57 +52,57 @@ export const couponApply =
         key: {
           code: req.body.code,
         },
-      })
+      });
+
       // check coupon is exist
-      if(!Object.keys(coupon).length > 0) return res.status(404).send("Invalid Coupon Code")
+      if (!Object.keys(coupon).length > 0)
+        return res.status(404).send("Invalid Coupon Code");
 
-      const requestItems = await Request.find({ user: req.user._id, status: "estimate-send" }).populate('user product')
+      // check coupon limit
+      if (coupon.limit < 0)
+        return res.status(400).send("Coupon Limit Exceeded");
 
-      if (!Object.keys(requestItems).length > 0) return res.status(404).send("Your are not eligible for applying coupon");
+      // check coupon expires date
+      if (new Date(coupon.expireDate).getTime() > new Date().getTime())
+        return res.status(400).send("Coupon Date Expire");
+
+      // retrive user cart data
+      const requestItems = await getUserCheckoutInfo({
+        Table: Request,
+        match: { user: req.user._id, status: "estimate-send" },
+      });
+
+      if (!Object.keys(requestItems).length > 0) {
+        return res
+          .status(404)
+          .send("Your are not eligible for applying coupon");
+      }
+
+      let eligibleProductTotalPrice = 0;
 
       for (let couponCategory of coupon.validCategory) {
-
         for (let requestItem of requestItems) {
-
-          requestItem.product.category.forEach(productCat => {
-
-            if (productCat.toString() === couponCategory.toString()) {
-
-              if (requestItem.couponApplied) {
-                return res.status(400).send("You have already applied this coupon");
-              }
-
-              requestItem.discountAmount = getDiscountAmount(coupon, requestItem.product.price)
-              requestItem.couponApplied = true;
-              requestItem.save();
-
+          requestItem.product.sub_category.forEach((productCat) => {
+            if (productCat._id.toString() === couponCategory.toString()) {
+              eligibleProductTotalPrice += requestItem.productPrice;
             }
-          })
+          });
         }
       }
 
+      if (eligibleProductTotalPrice < coupon.minPurchase) {
+        return res
+          .status(400)
+          .send(`Please Minimum Purchase more than ${coupon.minPurchase} TK`);
+      }
 
-      res.send(requestItems)
+      res.status(200).send({ requestItems, eligibleProductTotalPrice });
     } catch (error) {
       console.log(error);
       res.status(500).send("Internal server error");
     }
   };
 
-function getDiscountAmount(coupon, itemprice) {
-    let discountAmount = 0;
-    switch (coupon.type) {
-      case "fixed":
-        discountAmount = coupon.amount;
-        break;
-      case "percentage":
-        discountAmount = (coupon.amount / 100) * itemprice;
-        break;
-      default:
-        break;
-    }
-    return discountAmount;
-  }
 /**
  * create new coupon
  * @param { Object } db the db object for interacting with the database
@@ -122,7 +123,6 @@ export const create =
         key: req.body,
       })
         .then(async (coupon) => {
-          await db.save(coupon);
           res.status(200).send(coupon);
         })
         .catch(({ message }) => res.status(400).send({ message }));
@@ -133,10 +133,10 @@ export const create =
   };
 
 /**
- * get all request items
+ * get all coupon list
  * @param { Object } db the db object for interacting with the database
  * @param { Object } req the request object containing the properties of product
- * @returns { Object } returns the request item list
+ * @returns { Object } returns the coupon item list
  */
 export const getCoupon =
   ({ db }) =>
@@ -147,7 +147,10 @@ export const getCoupon =
         key: {
           allowedQuery,
           paginate: req.query.paginate === "true",
-          populate: { path: "validSubCategory", select: "name parentCat" },
+          populate: {
+            path: "validCategory",
+            select: "name",
+          },
         },
       })
         .then(async (request) => {
@@ -170,7 +173,7 @@ export const getCoupon =
  * @returns { Object } returns the coupon data object
  */
 export const updateCoupon =
-  ({ db, imageUp }) =>
+  ({ db }) =>
   async (req, res) => {
     try {
       // validate only updateAllowed properties
@@ -180,7 +183,7 @@ export const updateCoupon =
       // find request item
       const coupon = await db.findOne({
         table: Coupon,
-        key: { id: req.params.id },
+        key: { code: req.params.code },
       });
 
       // check coupon is exist
@@ -188,7 +191,7 @@ export const updateCoupon =
 
       db.update({
         table: Coupon,
-        key: { id: req.params.id, body: req.body },
+        key: { code: req.params.code, body: req.body },
       })
         .then((coupon) => {
           res.status(200).send(coupon);
@@ -203,12 +206,12 @@ export const updateCoupon =
     }
   };
 
-// /**
-//  * delete request
-//  * @param { Object } db the db object for interacting with the database
-//  * @param { Object } req the request object containing the properties of product
-//  * @returns { Object } returns the sucesss message
-//  */
+/**
+ * delete coupon
+ * @param { Object } db the db object for interacting with the database
+ * @param { Object } req the request object containing the properties of product
+ * @returns { Object } returns the sucesss message
+ */
 export const deleteCoupon =
   ({ db }) =>
   async (req, res) => {

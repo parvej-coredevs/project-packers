@@ -6,12 +6,15 @@ const schema = new Schema(
     user: {
       type: Schema.Types.ObjectId,
       ref: "User",
-    },
-    payment: {
-      type: Schema.Types.ObjectId,
-      ref: "Payment",
       autopopulate: true,
     },
+    payment: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Payment",
+        autopopulate: true,
+      },
+    ],
     orderId: {
       type: String,
       required: true,
@@ -21,25 +24,27 @@ const schema = new Schema(
       {
         type: Schema.Types.ObjectId,
         ref: "Request",
+        autopopulate: true,
       },
     ],
     status: {
       type: String,
       required: true,
-      enum: ["pending", "processing", "shipping", "completed", "canceld"],
-      default: "pending",
+      enum: [
+        "paid",
+        "unpaid",
+        "processing",
+        "shipping",
+        "completed",
+        "canceld",
+      ],
+      default: "unpaid",
     },
     deliveryDate: {
-      form: {
-        type: Date,
-      },
-      to: {
-        type: Date,
-      },
+      type: Date,
     },
     note: {
       type: String,
-      required: true,
     },
   },
   { versionKey: false, timestamps: true }

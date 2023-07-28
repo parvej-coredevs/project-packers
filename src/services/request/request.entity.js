@@ -9,6 +9,7 @@ import shippingAddress from "../user/shipping.schema";
 import trxId from "../../utils/trxId";
 import Payment from "../payment/payment.schema";
 import Order from "../order/order.schema";
+import productInvoice from "../../template/product-invoice";
 
 const ObjectId = mongoose.Types.ObjectId;
 
@@ -153,6 +154,63 @@ export const requestCheckout = () => async (req, res) => {
 };
 
 /**
+ * get user checkout information
+ * @param { Object } Table is request collection instance
+ * @param { Object } match is query object
+ * @returns { Object } returns user cart information
+ */
+export async function getUserCheckoutInfo({ Table, match }) {
+  return await Table.aggregate([
+    { $match: { ...match } },
+    {
+      $lookup: {
+        from: "users",
+        localField: "user",
+        foreignField: "_id",
+        as: "user",
+      },
+    },
+    {
+      $unwind: "$user",
+    },
+    {
+      $lookup: {
+        from: "shippingaddresses",
+        localField: "user.shippingAddress",
+        foreignField: "_id",
+        as: "user.shippingAddress",
+      },
+    },
+    {
+      $lookup: {
+        from: "products",
+        localField: "product",
+        foreignField: "_id",
+        as: "product",
+      },
+    },
+    {
+      $unwind: "$product",
+    },
+    {
+      $lookup: {
+        from: "subcategories",
+        localField: "product.sub_category",
+        foreignField: "_id",
+        as: "product.sub_category",
+      },
+    },
+    {
+      $addFields: {
+        productPrice: {
+          $multiply: ["$product.price", "$quantity"],
+        },
+      },
+    },
+  ]);
+}
+
+/**
  * initiate checkout request
  * @param { Object } db the db object for interacting with the database
  * @param { Object } req the request object containing the properties of product
@@ -181,6 +239,7 @@ export const initiatePaymentCheckout =
         match: { user: req.user._id, status: "estimate-send" },
       });
 
+      // generate request _id array for order.items field
       const orderItems = [];
       request.forEach((Item) => {
         orderItems.push(Item._id);
@@ -188,7 +247,7 @@ export const initiatePaymentCheckout =
 
       // calculate total amount
       const totalAmmount =
-        request.reduce((total, item) => total + item.totalAmmount, 0) +
+        request.reduce((total, item) => total + item.productPrice, 0) +
         (req.body.inside_dhaka ? 100 : 150);
 
       // console.log(request[0]);
@@ -308,59 +367,6 @@ export const checkoutCancel =
   };
 
 /**
- * get user checkout information
- * @param { Object } Table is request collection instance
- * @param { Object } match is query object
- * @returns { Object } returns user cart information
- */
-export async function getUserCheckoutInfo({ Table, match }) {
-  return await Table.aggregate([
-    { $match: { ...match } },
-    {
-      $addFields: {
-        productPrice: {
-          $multiply: ["$product.price", "$quantity"],
-        },
-      },
-    },
-    {
-      $addFields: {
-        totalAmmount: {
-          $sum: [
-            "$seller_takes",
-            "$sales_taxs",
-            "$packers_fee",
-            "$discountAmount",
-            "$productPrice",
-          ],
-        },
-      },
-    },
-    {
-      $project: {
-        requestId: 1,
-        "user.full_name": 1,
-        // "user.email": 1,
-        // "user.phone": 1,
-        // "user.shippingAddress": 1,
-        "product.name": 1,
-        // "product.price": 1,
-        "product.images": 1,
-        // "product.category.name": 1,
-        // quantity: 1,
-        // aprox_delivery: 1,
-        // totalAmmount: 1,
-        // productPrice: 1,
-        // packers_fee: 1,
-        // sales_taxs: 1,
-        // seller_takes: 1,
-        // discountAmount: 1,
-      },
-    },
-  ]);
-}
-
-/**
  * get all request items
  * @param { Object } db the db object for interacting with the database
  * @param { Object } req the request object containing the properties of product
@@ -459,6 +465,11 @@ export const updateRequest =
         product.link = req.body.link;
         delete req.body.link;
       }
+      product.price =
+        parseInt(req.body?.seller_takes) +
+        parseInt(req.body?.sales_taxs) +
+        parseInt(req.body?.packers_fee);
+
       db.save(product);
 
       db.update({
@@ -502,6 +513,54 @@ export const deleteRequest =
           console.log(err);
           res.status(400).send({ message: err.message });
         });
+    } catch (err) {
+      console.log(err);
+      res.status(500).send({ message: "Something went wrong" });
+    }
+  };
+
+/**
+ * send request invoice
+ * @param { Object } db the db object for interacting with the database
+ * @param { Object } req the request object containing the properties of product
+ * @returns { Object } returns the sucesss message
+ */
+export const sendRequestInvoice =
+  ({ mail }) =>
+  async (req, res) => {
+    try {
+      const request = await Request.findOne({ _id: req.params.id });
+
+      if (!request) {
+        return res.status(404).send({ message: "Request Item not found" });
+      }
+
+      if (request.status === "pending") {
+        return res.status(200).send({
+          message: "Please update sales takse, salse taxs, packer fee and",
+        });
+      }
+
+      const template = productInvoice({
+        name: request.product.name,
+        requestID: request.requestId,
+        seller_takes: request.seller_takes,
+        sales_taxs: request.sales_taxs,
+        packers_fee: request.packers_fee,
+        quantity: request.quantity,
+        delivery: request.aprox_delivery,
+      });
+
+      const sendMail = await mail({
+        receiver: request.user.email,
+        subject: "Requst Product Invoice",
+        body: template,
+        type: "html",
+      });
+
+      if (!sendMail)
+        return res.status(500).send("Failed to send Request product invoice");
+      res.status(200).send({ request, sendMail });
     } catch (err) {
       console.log(err);
       res.status(500).send({ message: "Something went wrong" });

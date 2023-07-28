@@ -4,6 +4,7 @@ import product from "./product/product";
 import request from "./request/request";
 import coupon from "./coupon/coupon";
 import support from "./support/support";
+import order from "./order/order";
 
 export const services = (app) => {
   app.configure(user);
@@ -12,4 +13,5 @@ export const services = (app) => {
   app.configure(request);
   app.configure(coupon);
   app.configure(support);
+  app.configure(order);
 };

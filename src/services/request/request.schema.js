@@ -7,6 +7,7 @@ const schema = new Schema(
     requestId: {
       type: String,
       required: true,
+      unique: true,
     },
     user: {
       type: Schema.Types.ObjectId,
@@ -49,12 +50,7 @@ const schema = new Schema(
     //   type: Number,
     // },
     aprox_delivery: {
-      form: {
-        type: Date,
-      },
-      to: {
-        type: Date,
-      },
+      type: String,
     },
     couponApplied: {
       type: Boolean,

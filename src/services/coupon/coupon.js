@@ -24,7 +24,7 @@ export default function coupon() {
 
   /**
    * GET /coupon
-   * @description This route is used to find coupon item.
+   * @description This route is used to get all coupon.
    * @response {Object} 200 - coupon list
    */
   this.route.get("/coupon", auth, checkRole(["admin"]), getCoupon(this));
@@ -42,7 +42,7 @@ export default function coupon() {
    * @response {Object} 200 - updated coupon object
    */
   this.route.patch(
-    "/coupon/:id",
+    "/coupon/:code",
     auth,
     checkRole(["admin"]),
     updateCoupon(this)
@@ -51,7 +51,7 @@ export default function coupon() {
   /**
    * DELETE /coupon/:id
    * @description This route is used for delete coupon. only admin can delete coupon
-   * @response {Object} 200 - updated coupon object
+   * @response {Object} 200 - deleted success message
    */
   this.route.delete(
     "/coupon/:id",

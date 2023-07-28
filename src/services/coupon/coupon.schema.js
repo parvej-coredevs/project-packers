@@ -8,18 +8,21 @@ const schema = new Schema(
       required: true,
       unique: true,
     },
+    description: {
+      type: String,
+      required: true,
+    },
     type: {
       type: String,
       required: true,
       enum: ["fixed", "percentage"],
       default: "percentage",
     },
+    minPurchase: {
+      type: Number,
+    },
     amount: {
       type: Number,
-      required: true,
-    },
-    description: {
-      type: String,
       required: true,
     },
     limit: {
@@ -31,12 +34,6 @@ const schema = new Schema(
       required: true,
     },
     validCategory: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Category",
-      },
-    ],
-    validSubCategory: [
       {
         type: Schema.Types.ObjectId,
         ref: "SubCategory",

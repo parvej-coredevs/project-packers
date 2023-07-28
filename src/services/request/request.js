@@ -11,6 +11,7 @@ import {
   getSingleRequest,
   updateRequest,
   deleteRequest,
+  sendRequestInvoice,
 } from "./request.entity.js";
 
 export default function request() {
@@ -30,7 +31,7 @@ export default function request() {
 
   /**
    * GET /request/checkout
-   * @description This route is used for request cart item. when admin send requested product estimate and cost then user can see this product
+   * @description This route is used for request cart item. when admin send requested product cost,tax,packing fee then user can see this product
    * in their checkout cart page
    * @response {Object} 200 - get requested cart item.
    */
@@ -105,14 +106,14 @@ export default function request() {
   );
 
   /**
-   * GET /request/send-invoice
+   * GET /request/:id/send-invoice
    * @description This route is used for send product invoice. only admin can send this request
    * @response {Object} 200 - success message
    */
-  // this.route.get(
-  //   "/request/send-invoice",
-  //   auth,
-  //   checkRole(["admin"]),
-  //   sendProductInvoice(this)
-  // );
+  this.route.get(
+    "/request/:id/send-invoice",
+    auth,
+    checkRole(["admin"]),
+    sendRequestInvoice(this)
+  );
 }
