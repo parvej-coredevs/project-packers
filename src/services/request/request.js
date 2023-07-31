@@ -2,7 +2,7 @@ import { auth, checkRole } from "../../services/middlewares.js";
 import {
   create,
   createExist,
-  requestCheckout,
+  // requestCheckout,
   initiatePaymentCheckout,
   checkoutSuccess,
   checkoutFail,
@@ -35,7 +35,7 @@ export default function request() {
    * in their checkout cart page
    * @response {Object} 200 - get requested cart item.
    */
-  this.route.get("/request/checkout", auth, requestCheckout(this));
+  // this.route.get("/request/checkout", auth, requestCheckout(this));
 
   /**
    * POST /initiate-checkout
@@ -64,14 +64,14 @@ export default function request() {
 
   /**
    * GET /request
-   * @description This route is used to find all request item.
+   * @description This route is used to find all request item for admin dahsboard.
    * @response {Object} 200 - request list
    */
   this.route.get("/request", auth, checkRole(["admin"]), getRequestItem(this));
 
   /**
    * GET /request/:id
-   * @description This route is used to find single request item.
+   * @description This route is used to find single request item for admin dashboard.
    * @response {Object} 200 - single request item object
    */
   this.route.get(

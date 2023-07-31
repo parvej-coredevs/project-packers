@@ -1,5 +1,5 @@
 {
-  "port": 8000,
+  "port": 7000,
   "origin": [],
   "useHTTP2": false,
   "SMTP_HOST": "",

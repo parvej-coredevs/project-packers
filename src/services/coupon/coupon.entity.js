@@ -1,7 +1,4 @@
 import Coupon from "../coupon/coupon.schema";
-import Product from "../product/product.schema";
-import Request from "../request/request.schema";
-import { getUserCheckoutInfo } from "../request/request.entity";
 /**
  * these set are use to validate the request item information
  */
@@ -36,72 +33,6 @@ const allowedQuery = new Set([
   "id",
   "paginate",
 ]);
-
-/**
- * apply coupon in user cart
- * @param { Object } db the db object for interacting with the database
- * @param { Object } req the request object containing the properties of product
- * @returns { Object } returns the updated message
- */
-export const couponApply =
-  ({ db }) =>
-  async (req, res) => {
-    try {
-      const coupon = await db.findOne({
-        table: Coupon,
-        key: {
-          code: req.body.code,
-        },
-      });
-
-      // check coupon is exist
-      if (!Object.keys(coupon).length > 0)
-        return res.status(404).send("Invalid Coupon Code");
-
-      // check coupon limit
-      if (coupon.limit < 0)
-        return res.status(400).send("Coupon Limit Exceeded");
-
-      // check coupon expires date
-      if (new Date(coupon.expireDate).getTime() > new Date().getTime())
-        return res.status(400).send("Coupon Date Expire");
-
-      // retrive user cart data
-      const requestItems = await getUserCheckoutInfo({
-        Table: Request,
-        match: { user: req.user._id, status: "estimate-send" },
-      });
-
-      if (!Object.keys(requestItems).length > 0) {
-        return res
-          .status(404)
-          .send("Your are not eligible for applying coupon");
-      }
-
-      let eligibleProductTotalPrice = 0;
-
-      for (let couponCategory of coupon.validCategory) {
-        for (let requestItem of requestItems) {
-          requestItem.product.sub_category.forEach((productCat) => {
-            if (productCat._id.toString() === couponCategory.toString()) {
-              eligibleProductTotalPrice += requestItem.productPrice;
-            }
-          });
-        }
-      }
-
-      if (eligibleProductTotalPrice < coupon.minPurchase) {
-        return res
-          .status(400)
-          .send(`Please Minimum Purchase more than ${coupon.minPurchase} TK`);
-      }
-
-      res.status(200).send({ requestItems, eligibleProductTotalPrice });
-    } catch (error) {
-      console.log(error);
-      res.status(500).send("Internal server error");
-    }
-  };
 
 /**
  * create new coupon

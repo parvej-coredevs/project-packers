@@ -10,6 +10,7 @@ import trxId from "../../utils/trxId";
 import Payment from "../payment/payment.schema";
 import Order from "../order/order.schema";
 import productInvoice from "../../template/product-invoice";
+import Cart from "../cart/cart.schema";
 
 const ObjectId = mongoose.Types.ObjectId;
 
@@ -133,25 +134,25 @@ export const createExist =
   };
 
 /**
- * create existing product request
+ * this route is used for get user cart items
  * @param { Object } db the db object for interacting with the database
  * @param { Object } req the request object containing the properties of product
  * @returns { Object } returns the existing product request object
  */
-export const requestCheckout = () => async (req, res) => {
-  try {
-    // get user chekout information
-    const request = await getUserCheckoutInfo({
-      Table: Request,
-      match: { user: req.user._id, status: "estimate-send" },
-    });
+// export const requestCheckout = () => async (req, res) => {
+//   try {
+//     // get user chekout information
+//     const request = await getUserCheckoutInfo({
+//       Table: Request,
+//       match: { user: req.user._id, status: "estimate-send" },
+//     });
 
-    res.status(200).send(request);
-  } catch (error) {
-    console.log(error);
-    return res.status(500).send("Internal server error");
-  }
-};
+//     res.status(200).send(request);
+//   } catch (error) {
+//     console.log(error);
+//     return res.status(500).send("Internal server error");
+//   }
+// };
 
 /**
  * get user checkout information
@@ -447,15 +448,16 @@ export const updateRequest =
       });
 
       // check request is exist
-      if (!request) return res.status(404).send("Invalid Request ID");
+      if (Object.keys(request).length < 1)
+        return res.status(404).send("Requst Item Not Found");
 
-      // find the reqyuested product
+      // find the requested product
       let product = await db.findOne({
         table: Product,
         key: { id: request.product._id },
       });
 
-      // check if new files are uploaded then upload new images and update updatebase
+      // check if new files are uploaded then upload new images and update update database
       if (req?.files && Object.keys(req?.files).length > 0) {
         const newImage = await fileUpload(req.files?.images, imageUp);
         product.images.push(newImage);
@@ -479,8 +481,59 @@ export const updateRequest =
           body: req.body,
         },
       })
-        .then((products) => {
-          res.status(200).send(products);
+        .then(async (request) => {
+          let cart = await db.findOne({
+            table: Cart,
+            key: { user: request.user },
+          });
+
+          // if previously dont have any proudct in uesr cart then create new cart otherwise just push request id in user cart.
+          if (!cart) {
+            cart = await db.create({
+              table: Cart,
+              key: { user: request.user, request: request._id },
+            });
+
+            return res.status(200).send({
+              message:
+                "Request Item Successfully Updated and created new cart item",
+              cart,
+            });
+          } else {
+            let exist = false;
+
+            await cart.request.map((item) => {
+              if (item.requestId === request.requestId) {
+                exist = true;
+              }
+            });
+
+            if (exist) {
+              return res.status(200).send({
+                message:
+                  "Request Item Successfully Updated and this item already exists is user cart",
+              });
+            }
+
+            cart.request.push(request._id);
+            await db.save(cart);
+
+            console.log("totalAmount", cart.request);
+
+            const totalAmount = await cart.request.reduce((total, item) => {
+              total += item.product.price * item.quantity;
+            }, 0);
+
+            cart.totalAmount = totalAmount;
+            cart.save(cart);
+
+            // console.log("totalAmount", totalAmount);
+
+            res.status(200).send({
+              message: "Request Item Successfully Updated",
+              cart,
+            });
+          }
         })
         .catch((err) => {
           console.error(err);
