@@ -3,9 +3,10 @@ import {
   getUserCart,
   couponApply,
   cartQuantityUpdate,
-  // singleCategory,
-  // updateCategory,
-  // deleteCategory,
+  initiatePaymentCheckout,
+  checkoutSuccess,
+  checkoutFail,
+  checkoutCancel,
 } from "./cart.entity";
 
 export default function cart() {
@@ -30,34 +31,28 @@ export default function cart() {
    */
   this.route.post("/cart/quantity-update", auth, cartQuantityUpdate(this));
 
-  // /**
-  //  * GET /category
-  //  * @description This route is used for get all category.
-  //  * @returns {Object} 200 - all category list.
-  //  */
-  // this.route.get("/category", getCategory(this));
+  /**
+   * POST /initiate-payment
+   * @description This route is used for initiate-payment.
+   * @response {Object} 201 - create a existing product request
+   */
+  this.route.post("/initiate-payment", auth, initiatePaymentCheckout(this));
 
-  // /**
-  //  * PATCH /category/:slug
-  //  * @description This route is used for update category.
-  //  * @returns {Object} 200 - get update category.
-  //  */
-  // this.route.patch(
-  //   "/category/:slug",
-  //   auth,
-  //   checkRole(["admin"]),
-  //   updateCategory(this)
-  // );
+  /**
+   * POST /checkout-success
+   * @description This route call from sll commerze server when user payment is success.
+   */
+  this.route.post("/checkout-success", checkoutSuccess(this));
 
-  // /**
-  //  * DELETE /category/:id
-  //  * @description This route is used for delete category.
-  //  * @returns {Object} 200 - success message
-  //  */
-  // this.route.delete(
-  //   "/category/:slug",
-  //   auth,
-  //   checkRole(["admin"]),
-  //   deleteCategory(this)
-  // );
+  /**
+   * POST /checkout-fail
+   * @description This route call from sll commerze server when user payment is fail.
+   */
+  this.route.post("/checkout-fail", checkoutFail(this));
+
+  /**
+   * POST /checkout-cancel
+   * @description This route call from sll commerze server when user payment is cancel.
+   */
+  this.route.post("/checkout-cancel", checkoutCancel(this));
 }

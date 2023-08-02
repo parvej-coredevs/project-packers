@@ -6,21 +6,29 @@ const schema = new Schema(
     user: {
       type: Schema.Types.ObjectId,
       ref: "User",
+      required: true,
     },
-    order: {
+    valid_id: {
       type: String,
     },
     amount: {
       type: Number,
       required: true,
     },
-    paymentStatus: {
+    order: {
+      type: Schema.Types.ObjectId,
+      ref: "Order",
+    },
+    bank_tran_id: {
+      type: String,
+    },
+    status: {
       type: String,
       required: true,
-      enum: ["Paid", "Unpaid"],
-      default: "Unpaid",
+      enum: ["Abandoned", "Closed", "Pending"],
+      default: "Pending",
     },
-    paymentMethod: {
+    method: {
       type: String,
       required: true,
     },

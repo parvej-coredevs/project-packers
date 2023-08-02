@@ -31,21 +31,20 @@ const schema = new Schema(
       type: String,
       required: true,
       enum: [
-        "paid",
-        "unpaid",
-        "processing",
-        "shipping",
-        "completed",
-        "canceld",
+        "Paid",
+        "Unpaid",
+        "Processing",
+        "Shipping",
+        "Completed",
+        "Canceled",
+        "Refunded",
       ],
-      default: "unpaid",
-    },
-    deliveryDate: {
-      type: Date,
+      default: "Unpaid",
     },
     note: {
       type: String,
     },
+    refund_ref_id: { type: String },
   },
   { versionKey: false, timestamps: true }
 );

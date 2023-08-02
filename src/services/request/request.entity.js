@@ -6,11 +6,11 @@ import randomId from "../../utils/randomId";
 import mongoose from "mongoose";
 import User from "../user/user.schema";
 import shippingAddress from "../user/shipping.schema";
-import trxId from "../../utils/trxId";
 import Payment from "../payment/payment.schema";
 import Order from "../order/order.schema";
 import productInvoice from "../../template/product-invoice";
 import Cart from "../cart/cart.schema";
+import { productPriceCalculate } from "../cart/cart.entity";
 
 const ObjectId = mongoose.Types.ObjectId;
 
@@ -131,240 +131,6 @@ export const createExist =
       console.log(error);
       return res.status(500).send("Internal server error");
     }
-  };
-
-/**
- * this route is used for get user cart items
- * @param { Object } db the db object for interacting with the database
- * @param { Object } req the request object containing the properties of product
- * @returns { Object } returns the existing product request object
- */
-// export const requestCheckout = () => async (req, res) => {
-//   try {
-//     // get user chekout information
-//     const request = await getUserCheckoutInfo({
-//       Table: Request,
-//       match: { user: req.user._id, status: "estimate-send" },
-//     });
-
-//     res.status(200).send(request);
-//   } catch (error) {
-//     console.log(error);
-//     return res.status(500).send("Internal server error");
-//   }
-// };
-
-/**
- * get user checkout information
- * @param { Object } Table is request collection instance
- * @param { Object } match is query object
- * @returns { Object } returns user cart information
- */
-export async function getUserCheckoutInfo({ Table, match }) {
-  return await Table.aggregate([
-    { $match: { ...match } },
-    {
-      $lookup: {
-        from: "users",
-        localField: "user",
-        foreignField: "_id",
-        as: "user",
-      },
-    },
-    {
-      $unwind: "$user",
-    },
-    {
-      $lookup: {
-        from: "shippingaddresses",
-        localField: "user.shippingAddress",
-        foreignField: "_id",
-        as: "user.shippingAddress",
-      },
-    },
-    {
-      $lookup: {
-        from: "products",
-        localField: "product",
-        foreignField: "_id",
-        as: "product",
-      },
-    },
-    {
-      $unwind: "$product",
-    },
-    {
-      $lookup: {
-        from: "subcategories",
-        localField: "product.sub_category",
-        foreignField: "_id",
-        as: "product.sub_category",
-      },
-    },
-    {
-      $addFields: {
-        productPrice: {
-          $multiply: ["$product.price", "$quantity"],
-        },
-      },
-    },
-  ]);
-}
-
-/**
- * initiate checkout request
- * @param { Object } db the db object for interacting with the database
- * @param { Object } req the request object containing the properties of product
- * @returns { Object } returns the existing product request object
- */
-export const initiatePaymentCheckout =
-  ({ db, payment, settings }) =>
-  async (req, res) => {
-    try {
-      // add shipping address
-      db.create({
-        table: shippingAddress,
-        key: req.body.shippingAddress,
-      }).then(async (shipping) => {
-        const user = await db.findOne({
-          table: User,
-          key: { _id: req.user._id },
-        });
-        user.shippingAddress = shipping._id;
-        db.save(user);
-      });
-
-      // get user chekout information
-      const request = await getUserCheckoutInfo({
-        Table: Request,
-        match: { user: req.user._id, status: "estimate-send" },
-      });
-
-      // generate request _id array for order.items field
-      const orderItems = [];
-      request.forEach((Item) => {
-        orderItems.push(Item._id);
-      });
-
-      // calculate total amount
-      const totalAmmount =
-        request.reduce((total, item) => total + item.productPrice, 0) +
-        (req.body.inside_dhaka ? 100 : 150);
-
-      // console.log(request[0]);
-
-      // initiate payment
-      const paymentData = await payment.init({
-        total_amount: totalAmmount,
-        currency: "BDT",
-        tran_id: "trxId()",
-        product_category: "General",
-        success_url: `${settings.hosturl}/checkout-success`,
-        cancel_url: `${settings.hosturl}/checkout-cancel`,
-        fail_url: `${settings.hosturl}/checkout-fail`,
-        ipn_url: `checkout/ipn`,
-        product_name: request[0].product.name || "",
-        product_category: "General",
-        product_profile: "General",
-        cus_name: request[0].user.full_name || "",
-        cus_email: request[0].user.email || "",
-        cus_add1: request[0].user.shippingAddress.address || "",
-        cus_city: request[0].user.shippingAddress.city || "",
-        cus_state: request[0].user.shippingAddress.area || "",
-        cus_postcode: request[0].user.shippingAddress.zip || "",
-        cus_country: request[0].user.shippingAddress.city || "",
-        cus_phone: request[0].user.phone || "",
-        shipping_method: "No",
-        ship_name: "Customer Name",
-        ship_add1: "Dhaka",
-        ship_add2: "Dhaka",
-        ship_city: "Dhaka",
-        ship_state: "Dhaka",
-        ship_postcode: 100000,
-        ship_country: "Bangladesh",
-        value_a: req.user._id.toString(),
-        value_b: req.body.note,
-        value_c: JSON.stringify(orderItems),
-      });
-
-      res.status(200).send({ url: paymentData.GatewayPageURL });
-    } catch (error) {
-      console.log(error);
-      return res.status(500).send("Internal server error");
-    }
-  };
-
-/**
- * payment success callback
- * @param { Object } payment the payment object interacting with payment related operations
- * @param { Object } req the request object containing the properties when user successfully payment
- * @returns { Object } returns the existing product request object
- */
-export const checkoutSuccess =
-  ({ db, payment }) =>
-  async (req, res) => {
-    // console.log("success data", req.body);
-    const validate = await payment.validate({ val_id: req.body.val_id });
-    // console.log("validated", validate);
-
-    const paymentData = await db.create({
-      table: Payment,
-      key: {
-        user: validate.value_a,
-        valid_id: validate.val_id,
-        amount: validate.amount,
-        bank_tran_id: validate.bank_tran_id,
-        paymentMethod: validate.card_type,
-        paymentStatus:
-          validate.status === "VALID" || "VALIDATED" ? "Paid" : "Unpaid",
-        transactionId: validate.tran_id,
-        transactionDate: validate.tran_date,
-      },
-    });
-
-    const order = await db.create({
-      table: Order,
-      key: {
-        user: validate.value_a,
-        payment: paymentData._id,
-        items: JSON.parse(validate.value_c),
-        orderId: randomId(),
-        note: validate.value_b,
-      },
-    });
-
-    paymentData.order = order._id;
-    db.save(paymentData);
-
-    if (validate.status === "VALID" || "VALIDATED") {
-      return res.redirect("https://google.com"); // redirect to success page
-    }
-
-    res.redirect("https://google.com"); // redirect to fail page
-  };
-
-/**
- * payment fail callback
- * @param { Object } payment the payment object interacting with payment related operations
- * @param { Object } req the request object containing the properties when user payment is failed
- * @returns { Object } returns the existing product request object
- */
-export const checkoutFail =
-  ({ payment }) =>
-  async (req, res) => {
-    console.log("fail data", req.body);
-  };
-
-/**
- * payment cancel callback
- * @param { Object } payment the payment object interacting with payment related operations
- * @param { Object } req the request object containing the properties when user payment is cancelled
- * @returns { Object } returns the existing product request object
- */
-export const checkoutCancel =
-  ({ payment }) =>
-  async (req, res) => {
-    console.log("cancel data", req.body);
   };
 
 /**
@@ -494,6 +260,10 @@ export const updateRequest =
               key: { user: request.user, request: request._id },
             });
 
+            // calculate product total amount and update cart
+            cart.totalAmount = await productPriceCalculate(cart);
+            await db.save(cart);
+
             return res.status(200).send({
               message:
                 "Request Item Successfully Updated and created new cart item",
@@ -501,33 +271,31 @@ export const updateRequest =
             });
           } else {
             let exist = false;
-
+            // check cart item exists or not in user cart collection. if item push multiple times they generate wrong callculations.
             await cart.request.map((item) => {
               if (item.requestId === request.requestId) {
                 exist = true;
               }
             });
 
+            // if item already exist then only update cart total price and return response.
             if (exist) {
+              cart.totalAmount = await productPriceCalculate(cart);
+              await db.save(cart);
+
               return res.status(200).send({
                 message:
                   "Request Item Successfully Updated and this item already exists is user cart",
+                cart,
               });
             }
 
+            // push new item to user cart and update collection.
             cart.request.push(request._id);
             await db.save(cart);
 
-            console.log("totalAmount", cart.request);
-
-            const totalAmount = await cart.request.reduce((total, item) => {
-              total += item.product.price * item.quantity;
-            }, 0);
-
-            cart.totalAmount = totalAmount;
-            cart.save(cart);
-
-            // console.log("totalAmount", totalAmount);
+            cart.totalAmount = await productPriceCalculate(cart);
+            await db.save(cart);
 
             res.status(200).send({
               message: "Request Item Successfully Updated",
@@ -582,7 +350,10 @@ export const sendRequestInvoice =
   ({ mail }) =>
   async (req, res) => {
     try {
-      const request = await Request.findOne({ _id: req.params.id });
+      const request = await Request.findOne({ _id: req.params.id }).populate(
+        "user",
+        "email"
+      );
 
       if (!request) {
         return res.status(404).send({ message: "Request Item not found" });
@@ -613,7 +384,7 @@ export const sendRequestInvoice =
 
       if (!sendMail)
         return res.status(500).send("Failed to send Request product invoice");
-      res.status(200).send({ request, sendMail });
+      res.status(200).send({ sendMail, request });
     } catch (err) {
       console.log(err);
       res.status(500).send({ message: "Something went wrong" });

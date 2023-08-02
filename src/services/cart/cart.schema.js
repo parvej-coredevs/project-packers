@@ -19,7 +19,7 @@ const schema = new Schema(
       },
     ],
     totalAmount: { type: Number },
-    discountAmount: { type: Number },
+    discountAmount: { type: Number, default: 0 },
     couponApplied: { type: Boolean, default: false },
   },
   { timestamps: true, versionKey: false }

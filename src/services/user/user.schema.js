@@ -10,12 +10,13 @@ const schema = new Schema(
     role: {
       type: String,
       required: true,
-      enum: ["super-admin", "admin", "staff", "customer"],
+      enum: ["super-admin", "admin", "staff", "support", "customer"],
       default: "customer",
     },
     password: { type: String, required: true },
     phone: { type: String },
     status: { type: String, enum: ["active", "deactive"] },
+    provider: { type: String },
     shippingAddress: {
       type: Schema.Types.ObjectId,
       ref: "shippingAddress",

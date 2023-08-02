@@ -1,9 +1,9 @@
 {
-  "port": 7000,
+  "port": 9000,
   "origin": [],
   "useHTTP2": false,
-  "SMTP_HOST": "",
-  "SMTP_PORT": "",
+  "SMTP_HOST": "smtp.google.com",
+  "SMTP_PORT": "25",
   "SMTP_USER": "parvejhossain4040@gmail.com",
   "SMTP_PASSWORD": "tukrgibhkezxpoqu",
   "EMAIL_NAME": "Parvej Hossain",
@@ -14,5 +14,8 @@
   "reset_pass_secret": "yuaslkfjlksadfoewjff",
   "store_id": "cored64bf7afe242ad",
   "store_password": "cored64bf7afe242ad@ssl",
-  "hosturl": "http://localhost:8000/api"
+  "hosturl": "http://localhost:7000/api",
+  "GOOGLE_CLIENT_ID": "262177797952-14tv2g2lls55ipj0gem7jd3up972llpi.apps.googleusercontent.com",
+  "GOOGLE_CLIENT_SECRET": "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",
+  "GOOGLE_CALLBACK": "http://localhost:5000/auth/google/callback"
 }

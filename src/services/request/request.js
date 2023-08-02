@@ -2,11 +2,6 @@ import { auth, checkRole } from "../../services/middlewares.js";
 import {
   create,
   createExist,
-  // requestCheckout,
-  initiatePaymentCheckout,
-  checkoutSuccess,
-  checkoutFail,
-  checkoutCancel,
   getRequestItem,
   getSingleRequest,
   updateRequest,
@@ -28,39 +23,6 @@ export default function request() {
    * @response {Object} 201 - create a existing product request
    */
   this.route.post("/request/exist-item", auth, createExist(this));
-
-  /**
-   * GET /request/checkout
-   * @description This route is used for request cart item. when admin send requested product cost,tax,packing fee then user can see this product
-   * in their checkout cart page
-   * @response {Object} 200 - get requested cart item.
-   */
-  // this.route.get("/request/checkout", auth, requestCheckout(this));
-
-  /**
-   * POST /initiate-checkout
-   * @description This route is used for initiate-checkout.
-   * @response {Object} 201 - create a existing product request
-   */
-  this.route.post("/initiate-checkout", auth, initiatePaymentCheckout(this));
-
-  /**
-   * POST /checkout-success
-   * @description This route call from sll commerze server when user payment is success.
-   */
-  this.route.post("/checkout-success", checkoutSuccess(this));
-
-  /**
-   * POST /checkout-fail
-   * @description This route call from sll commerze server when user payment is fail.
-   */
-  this.route.post("/checkout-fail", checkoutFail(this));
-
-  /**
-   * POST /checkout-cancel
-   * @description This route call from sll commerze server when user payment is cancel.
-   */
-  this.route.post("/checkout-cancel", checkoutCancel(this));
 
   /**
    * GET /request

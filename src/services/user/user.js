@@ -13,8 +13,17 @@ import {
   verifyOtp,
   updatePassword,
 } from "./user.entity";
+import passport from "passport";
 
 export default function user() {
+  /**
+   * GET /auth/google
+   */
+  this.route.get(
+    "/auth/google",
+    passport.authenticate("google", { scope: ["profile", "email"] })
+  );
+
   /**
    * POST /user
    * @description This route is used to create a user.
