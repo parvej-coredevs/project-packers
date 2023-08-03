@@ -124,7 +124,7 @@ export const updateOrder =
 /**
  * this route is used for inititate refund for a order
  * @param { Object } db the db object for interacting with the database
- * @param { Object } req the request object containing the properties of product
+ * @param { Object } payment is instance of ssl commerze packeage
  * @returns { Object } returns the sucesss message
  */
 export const initiateRefund =
@@ -145,24 +145,20 @@ export const initiateRefund =
       if (order.status === "Unpaid") {
         return res
           .status(400)
-          .send({ message: "This order not eligin for refund" });
+          .send({ message: "This order not eligible for refund" });
       }
 
-      const pay = order.payment.filter(
-        (payment) => payment.status === "Closed"
-      );
-
       // check valid pay
-      if (pay.length < 1) {
+      if (!order.payment.status === "Closed") {
         return res
           .status(400)
-          .send({ message: "There are no payment in this order" });
+          .send({ message: "There are no successfull payment in this order" });
       }
 
       // initialize payment
       const refund = await payment.initiateRefund({
-        bank_tran_id: pay[0].bank_tran_id,
-        refund_amount: pay[0].amount,
+        bank_tran_id: order.payment.bank_tran_id,
+        refund_amount: order.payment.amount,
         refund_remarks: order.note || "General",
         refe_id: order.orderId,
       });
@@ -186,6 +182,45 @@ export const initiateRefund =
       db.save(order);
 
       res.send({ message: "Your Refund Request is Initialized", refund });
+    } catch (error) {
+      console.error(error);
+      res.status(500).send("Something went wrong");
+    }
+  };
+
+/**
+ * this route is used for check refund status
+ * @param { Object } db the db object for interacting with the database
+ * @param { Object } payment is instance of ssl commerze packeage
+ * @returns { Object } returns the sucesss message
+ */
+export const refundStatus =
+  ({ db, payment }) =>
+  async (req, res) => {
+    try {
+      // find order item
+      const order = await db.findOne({
+        table: Order,
+        key: { id: req.params.orderId },
+      });
+
+      if (!order) {
+        return res.status(400).send({ message: "Invalid Order ID" });
+      }
+
+      // check order is successfully initiate refund request
+      if (order.status !== "Refunded" || order.refund_ref_id === undefined) {
+        return res
+          .status(400)
+          .send({ message: "Please initiate refund request" });
+      }
+
+      // initialize payment
+      const refund = await payment.refundQuery({
+        refund_ref_id: order.refund_ref_id,
+      });
+
+      res.send(refund);
     } catch (error) {
       console.error(error);
       res.status(500).send("Something went wrong");

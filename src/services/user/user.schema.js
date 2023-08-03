@@ -5,7 +5,7 @@ import autopopulate from "mongoose-autopopulate";
 const schema = new Schema(
   {
     full_name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
+    email: { type: String, unique: true },
     avatar: { type: String },
     role: {
       type: String,
@@ -13,10 +13,9 @@ const schema = new Schema(
       enum: ["super-admin", "admin", "staff", "support", "customer"],
       default: "customer",
     },
-    password: { type: String, required: true },
+    password: { type: String },
     phone: { type: String },
-    status: { type: String, enum: ["active", "deactive"] },
-    provider: { type: String },
+    status: { type: String, enum: ["active", "deactive"], default: "active" },
     shippingAddress: {
       type: Schema.Types.ObjectId,
       ref: "shippingAddress",
@@ -27,6 +26,8 @@ const schema = new Schema(
       ref: "billingAddress",
       autopopulate: true,
     },
+    social_id: { type: String },
+    provider: { type: String },
   },
   { timestamps: true, versionKey: false }
 );

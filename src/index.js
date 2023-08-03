@@ -7,10 +7,10 @@ import "./utils/dateOverride";
 
 (() => {
   // Check for clients directory as it is required by this framework
-  // const statics = path.resolve(__dirname, '..', 'client');
-  // if (!fs.existsSync(statics)) {
-  //   fs.mkdirSync(statics);
-  // }
+  const statics = path.resolve(__dirname, "..", "client");
+  if (!fs.existsSync(statics)) {
+    fs.mkdirSync(statics);
+  }
 
   const deps = [
     {

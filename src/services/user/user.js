@@ -14,14 +14,27 @@ import {
   updatePassword,
 } from "./user.entity";
 import passport from "passport";
+import { socialUsreRespose } from "./user.middleware";
 
 export default function user() {
-  /**
-   * GET /auth/google
-   */
+  // google authentication
+  this.route.get("/auth/google", passport.authenticate("google"));
   this.route.get(
-    "/auth/google",
-    passport.authenticate("google", { scope: ["profile", "email"] })
+    "/auth/google/callback",
+    passport.authenticate("google", {
+      session: false,
+    }),
+    socialUsreRespose
+  );
+
+  // facebook authentication
+  this.route.get("/auth/facebook", passport.authenticate("facebook"));
+  this.route.get(
+    "/auth/facebook/callback",
+    passport.authenticate("facebook", {
+      session: true,
+    }),
+    socialUsreRespose
   );
 
   /**
@@ -37,6 +50,21 @@ export default function user() {
    * @response {Object} 200 - the user.
    */
   this.route.post("/user/login", login(this));
+
+  /**
+   * POST /logout
+   * @description this route is user logout.
+   * @response {Object} 200 - the user.
+   */
+  this.route.get("/user/logout", (req, res) => {
+    req.logout(function (err) {
+      if (err) {
+        console.error("Error during logout:", err);
+        return res.status(500).send("Error during logout");
+      }
+      res.redirect("/");
+    });
+  });
 
   /**
    * GET /user/me

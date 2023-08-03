@@ -32,7 +32,7 @@ import { driverCache } from "./controllers/driverCache";
 
 import passport from "passport";
 import session from "express-session";
-import { Strategy as GoogleStrategy } from "passport-google-oauth20";
+import passportConfig from "./utils/passportConfig";
 
 export default class App {
   constructor({ deps } = {}) {
@@ -97,14 +97,6 @@ export default class App {
         credentials: true,
       })
     );
-    this.express.use(morgan("common")); // Logger
-    this.express.use(actuator({ infoGitMode: "full" })); // Health Checker
-    this.express.use(json()); // Parse JSON response
-    this.express.use(urlencoded({ extended: false })); // Legacy URL encoding
-    this.express.use(cookieParser()); // Parse cookies
-    this.express.use(parse()); // Parse Form data as JSON
-    this.express.use("/api", limiter, this.router); // All the API routes
-    this.express.use(express.static(path.resolve(__dirname, "..", "client"))); // REACT build files (Statics)
     this.express.use(
       session({
         secret: this.config.token_secret,
@@ -117,28 +109,17 @@ export default class App {
     this.express.use(passport.initialize());
     this.express.use(passport.session());
 
-    // Serialize and deserialize user for session management
-    passport.serializeUser((user, done) => {
-      done(null, user);
-    });
-    passport.deserializeUser((user, done) => {
-      done(null, user);
-    });
+    this.express.use(morgan("common")); // Logger
+    this.express.use(actuator({ infoGitMode: "full" })); // Health Checker
+    this.express.use(json()); // Parse JSON response
+    this.express.use(urlencoded({ extended: false })); // Legacy URL encoding
+    this.express.use(cookieParser()); // Parse cookies
+    this.express.use(parse()); // Parse Form data as JSON
+    this.express.use("/api", limiter, this.router); // All the API routes
+    this.express.use(express.static(path.resolve(__dirname, "..", "client"))); // REACT build files (Statics)
 
-    // Configure the GoogleStrategy
-    passport.use(
-      new GoogleStrategy(
-        {
-          clientID: this.config.GOOGLE_CLIENT_ID,
-          clientSecret: this.config.GOOGLE_CLIENT_SECRET,
-          callbackURL: this.config.GOOGLE_CALLBACK,
-        },
-        (accessToken, refreshToken, profile, done) => {
-          // Here you can save the user to your database or do other processing as needed
-          return done(null, profile);
-        }
-      )
-    );
+    // setup passport configuration
+    passportConfig(passport, this.config);
 
     if (this.config.useHTTP2) {
       // SSL configuration

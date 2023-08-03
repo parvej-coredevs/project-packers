@@ -4,6 +4,7 @@ import {
   getSingleOrder,
   updateOrder,
   initiateRefund,
+  refundStatus,
 } from "./order.entity.js";
 
 export default function order() {
@@ -34,26 +35,7 @@ export default function order() {
   this.route.patch("/order/:id", auth, checkRole(["admin"]), updateOrder(this));
 
   /**
-   * POST /order
-   * @description This route is used to create a new new orde.
-   * @response {Object} 201 - create new coupon
-   */
-  // this.route.post("/order", auth, createOrder(this));
-
-  /**
-   * DELETE /order/:id
-   * @description This route is used for delete order. only admin can delete order
-   * @response {Object} 200 - return deleted message
-   */
-  // this.route.delete(
-  //   "/order/:id",
-  //   auth,
-  //   checkRole(["admin"]),
-  //   deleteOrder(this)
-  // );
-
-  /**
-   * POST /initiate-refund/:orderId
+   * GET /initiate-refund/:orderId
    * @description This route is used to initiate refund for a order.
    * @response {Object} 200 - success response
    */
@@ -62,5 +44,17 @@ export default function order() {
     auth,
     checkRole(["admin"]),
     initiateRefund(this)
+  );
+
+  /**
+   * GET /refund-status/:orderId
+   * @description This route is used for check refund request status.
+   * @response {Object} 200 - success response
+   */
+  this.route.get(
+    "/refund-status/:orderId",
+    auth,
+    checkRole(["admin"]),
+    refundStatus(this)
   );
 }

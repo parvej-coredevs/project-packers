@@ -8,13 +8,11 @@ const schema = new Schema(
       ref: "User",
       autopopulate: true,
     },
-    payment: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Payment",
-        autopopulate: true,
-      },
-    ],
+    payment: {
+      type: Schema.Types.ObjectId,
+      ref: "Payment",
+      autopopulate: true,
+    },
     orderId: {
       type: String,
       required: true,
