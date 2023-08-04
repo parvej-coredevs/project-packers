@@ -26,45 +26,55 @@
  *   }
  * });
  */
-const find = ({ table, key = {} }) => new Promise((resolve, reject) => {
-  const queryKeys = Object.keys(key?.query || {});
-  const verified = queryKeys.every(k => (key.allowedQuery || new Set([])).has(k));
-  if (!verified) return reject('Query validation issue');
-  const noPaginate = key.paginate === false;
-  key.options = noPaginate ? { sort: {} } : {
-    ...key.populate && { populate: { ...key.populate } },
-    page: key?.query?.page || 0,
-    limit: key?.query?.limit || 10,
-    sort: { ...!key?.query?.sortBy && { createdAt: -1 } }
-  };
-  // prepare query object with provied queries to find.
-  queryKeys.forEach(async k => {
-    if (typeof key?.query[k] === 'string' && key?.query[k].startsWith('{"') && key?.query[k].endsWith('}')) key.query[k] = JSON.parse(key?.query[k]);
-    if (k === 'sortBy') {
-      const parts = key?.query?.sortBy.split(':');
-      return key.options.sort[parts[0]] = parts[1] === 'desc' ? -1 : 1;
-    }
-    if (k === 'id') {
-      key._id = key?.query?.id;
-      return delete key?.query?.id;
-    }
-    key[k] = key?.query[k];
-  });
+const find = ({ table, key = {} }) =>
+  new Promise((resolve, reject) => {
+    const queryKeys = Object.keys(key?.query || {});
+    const verified = queryKeys.every((k) =>
+      (key.allowedQuery || new Set([])).has(k)
+    );
+    if (!verified) return reject("Query validation issue");
+    const noPaginate = key.paginate === false;
+    key.options = noPaginate
+      ? { sort: {} }
+      : {
+          ...(key.populate && { populate: { ...key.populate } }),
+          page: key?.query?.page || 0,
+          limit: key?.query?.limit || 10,
+          sort: { ...(!key?.query?.sortBy && { createdAt: -1 }) },
+        };
+    // prepare query object with provied queries to find.
+    queryKeys.forEach(async (k) => {
+      if (
+        typeof key?.query[k] === "string" &&
+        key?.query[k].startsWith('{"') &&
+        key?.query[k].endsWith("}")
+      )
+        key.query[k] = JSON.parse(key?.query[k]);
+      if (k === "sortBy") {
+        const parts = key?.query?.sortBy.split(":");
+        return (key.options.sort[parts[0]] = parts[1] === "desc" ? -1 : 1);
+      }
+      if (k === "id") {
+        key._id = key?.query?.id;
+        return delete key?.query?.id;
+      }
+      key[k] = key?.query[k];
+    });
 
-  const method = noPaginate ? 'find' : 'paginate';
-  const options = key.options;
-  const populate = key.populate;
-  delete key.allowedQuery;
-  delete key.populate;
-  delete key.paginate;
-  delete key.options;
-  delete key?.query;
-  const args = [key, ...noPaginate ? [null] : [], options];
-  // May break
-  resolve(table[method](...args)[noPaginate ? 'populate' : 'then'](populate))
-    .then(res => resolve(res))
-    .catch(e => reject(e));
-});
+    const method = noPaginate ? "find" : "paginate";
+    const options = key.options;
+    const populate = key.populate;
+    delete key.allowedQuery;
+    delete key.populate;
+    delete key.paginate;
+    delete key.options;
+    delete key?.query;
+    const args = [key, ...(noPaginate ? [null] : []), options];
+    // May break
+    resolve(table[method](...args)[noPaginate ? "populate" : "then"](populate))
+      .then((res) => resolve(res))
+      .catch((e) => reject(e));
+  });
 
 /**
  * Find a single document in a specified MongoDB collection.
@@ -75,13 +85,17 @@ const find = ({ table, key = {} }) => new Promise((resolve, reject) => {
  * @example
  * const result = await findOne({ table: 'users', key: { name: 'John' } });
  */
-const findOne = async ({ table, key = {} }) => new Promise((resolve, reject) => {
-  if (key.id) key._id = key.id; delete key.id;
-  if (Object.keys(key).length < 1) resolve(null);
-  table.findOne(key).populate(key.populate?.path, key.populate?.select?.split(' '))
-    .then(res => resolve(res))
-    .catch(e => reject(e));
-});
+const findOne = async ({ table, key = {} }) =>
+  new Promise((resolve, reject) => {
+    if (key.id) key._id = key.id;
+    delete key.id;
+    if (Object.keys(key).length < 1) resolve(null);
+    table
+      .findOne(key)
+      .populate(key.populate?.path, key.populate?.select?.split(" "))
+      .then((res) => resolve(res))
+      .catch((e) => reject(e));
+  });
 
 /**
  * Create a new document in a specified MongoDB collection.
@@ -102,7 +116,7 @@ const create = async ({ table, key }) => {
   try {
     const elem = await new table(key);
     const res = await elem.save();
-    key.populate && await res.populate(key.populate);
+    key.populate && (await res.populate(key.populate));
     return res;
   } catch (e) {
     console.log(e);
@@ -128,17 +142,24 @@ const create = async ({ table, key }) => {
  */
 const update = async ({ table, key }) => {
   try {
-    if (key.id) key._id = key.id; delete key.id;
+    if (key.id) key._id = key.id;
+    delete key.id;
     const element = await table.findOne(key);
     if (!element) return Promise.resolve(element);
-    Object.keys(key.body || {}).forEach(param => element[param] = key.body[param]);
+    Object.keys(key.body || {}).forEach(
+      (param) => (element[param] = key.body[param])
+    );
     const res = await element.save();
-    key.populate && await res.populate(key.populate?.path, key.populate?.select?.split(' '));
+    key.populate &&
+      (await res.populate(
+        key.populate?.path,
+        key.populate?.select?.split(" ")
+      ));
     return Promise.resolve(element);
+  } catch (e) {
+    return Promise.reject(e);
   }
-  catch (e) { return Promise.reject(e); }
 };
-
 
 /**
  * remove - Removes an element from the specified table that matches the provided key.
@@ -152,17 +173,20 @@ const update = async ({ table, key }) => {
 const remove = async (target) => {
   const { table, key, _id } = target;
   try {
-    if (_id) {//if mongodb instance found then delete with obj.remove method.
+    if (_id) {
+      //if mongodb instance found then delete with obj.remove method.
       await target.remove();
       return Promise.resolve(target);
     }
-    if (key.id) key._id = key.id; delete key.id;
+    if (key.id) key._id = key.id;
+    delete key.id;
     const element = await table.findOne(key);
     if (!element) return Promise.resolve(element);
     await element.remove();
     return Promise.resolve(element);
+  } catch (e) {
+    Promise.reject(e);
   }
-  catch (e) { Promise.reject(e); }
 };
 
 /**
@@ -177,18 +201,19 @@ const removeAll = async ({ table, key }) => {
   try {
     const res = await table.deleteMany(key);
     return Promise.resolve(res);
+  } catch (e) {
+    Promise.reject(e);
   }
-  catch (e) { Promise.reject(e); }
 };
-
 
 const updateMany = async ({ table, key }) => {
   try {
     const { filter, update, options, callback } = key;
     const res = await table.updateMany(filter, update, options, callback);
     return Promise.resolve(res);
+  } catch (err) {
+    Promise.reject(err);
   }
-  catch (err) { Promise.reject(err); }
 };
 
 /**
@@ -215,4 +240,16 @@ const sort = async (data, payload = {}) => await data.sort(payload);
 
 const aggr = async ({ table, key }) => await table.aggregate(key);
 
-export { find, findOne, create, remove, update, save, removeAll, populate, sort, aggr, updateMany };
+export {
+  find,
+  findOne,
+  create,
+  remove,
+  update,
+  save,
+  removeAll,
+  populate,
+  sort,
+  aggr,
+  updateMany,
+};

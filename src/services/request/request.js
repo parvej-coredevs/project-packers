@@ -2,6 +2,7 @@ import { auth, checkRole } from "../../services/middlewares.js";
 import {
   create,
   createExist,
+  itemQuantityUpdate,
   getRequestItem,
   getSingleRequest,
   updateRequest,
@@ -23,6 +24,13 @@ export default function request() {
    * @response {Object} 201 - create a existing product request
    */
   this.route.post("/request/exist-item", auth, createExist(this));
+
+  /**
+   * POST /cart/quantity-update
+   * @description This route is used to update user cart item quantity.
+   * @response {Object} 200 - update cart item
+   */
+  this.route.post("/request/quantity-update", auth, itemQuantityUpdate(this));
 
   /**
    * GET /request

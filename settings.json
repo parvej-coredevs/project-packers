@@ -1,5 +1,5 @@
 {
-  "port": 5000,
+  "port": 8000,
   "origin": [],
   "useHTTP2": false,
   "SMTP_HOST": "smtp.google.com",
@@ -14,10 +14,10 @@
   "reset_pass_secret": "yuaslkfjlksadfoewjff",
   "store_id": "cored64bf7afe242ad",
   "store_password": "cored64bf7afe242ad@ssl",
-  "hosturl": "http://localhost:5000/api",
+  "hosturl": "http://localhost:8000/api",
   "GOOGLE_CLIENT_ID": "503784692129-gq66mmhh1f590v8aq2dc50ss506bunii.apps.googleusercontent.com",
   "GOOGLE_CLIENT_SECRET": "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",
-  "GOOGLE_CALLBACK": "http://localhost:5000/api/auth/google/callback",
+  "GOOGLE_CALLBACK": "http://localhost:8000/api/auth/google/callback",
   "FACEBOOK_APP_ID": "951305785979793",
   "FACEBOOK_APP_SECRET": "21253c27a4451b541f0f588432730866",
   "FACEBOOK_CALLBACK": "/api/auth/facebook/callback"

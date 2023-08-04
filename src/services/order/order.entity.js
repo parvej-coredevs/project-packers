@@ -4,7 +4,6 @@ import Request from "../request/request.schema";
 /**
  * these set are use to validate the request item information
  */
-const updateAllowed = new Set(["payment", "items", "status", "note"]);
 const allowedQuery = new Set([
   "items",
   "status",
@@ -17,6 +16,7 @@ const allowedQuery = new Set([
   "paginate",
   "sortBy",
 ]);
+// const updateAllowed = new Set(["payment", "items", "status", "note"]);
 /**
  * get all orders for admin dashboard
  * @param { Object } db the db object for interacting with the database
@@ -82,42 +82,88 @@ export const getSingleOrder =
   };
 
 /**
- * update coupon data
+ * update user order
  * @param { Object } db the db object for interacting with the database
  * @param { Object } req the request object containing the properties of product
  * @returns { Object } returns the coupon data object
  */
 export const updateOrder =
-  ({ db }) =>
+  ({ db, mail }) =>
   async (req, res) => {
     try {
       // validate only updateAllowed properties
-      const valid = Object.keys(req.body).every((k) => updateAllowed.has(k));
+      const valid = Object.keys(req.body).every((k) =>
+        new Set(["status", "note"]).has(k)
+      );
       if (!valid) return res.status(400).send("Bad request, Validation failed");
 
-      // find request item
+      // find order item
       const order = await db.findOne({
         table: Order,
         key: { id: req.params.id },
       });
 
-      // check coupon is exist
-      if (!order) return res.status(404).send("Invalid Order ID");
+      // check order is exist
+      if (!order) return res.status(404).send("Order Not Found");
 
-      db.update({
-        table: Coupon,
-        key: { id: req.params.id, body: req.body },
-      })
-        .then((coupon) => {
-          res.status(200).send(coupon);
-        })
-        .catch((err) => {
-          console.error(err);
-          res.status(500).send("Error: " + err.message);
-        });
+      Object.keys(req.body).forEach((key) => (order[key] = req.body[key]));
+      await db.save(order);
+
+      const sendMail = await mail({
+        receiver: order.user.email,
+        subject: `Your Order Status Update - #${order.orderId}`,
+        body: `Dear ${order.user.full_name},
+
+We hope this email finds you well. We are writing to inform you about the recent update to your order with the following details:
+
+Order Number: #${order.orderId}
+Order Date: ${order.createdAt}
+Updated Status: ${order.status}
+
+We are pleased to confirm that your order has been ${order.status}, and it is now On its way to delivery. We are doing our best to ensure a smooth and timely delivery process.
+
+If you have any questions or concerns regarding your order, please feel free to reach out to our customer support team. We are here to assist you.
+
+Thank you for shopping with us. We truly value your business and look forward to serving you again soon.
+
+Best regards,
+Project Packer Team`,
+        type: "text",
+      });
+
+      if (!sendMail) return res.status(500).send("Failed to send email");
+
+      res.status(200).send(order);
     } catch (error) {
       console.error(error);
       res.status(500).send("Something went wrong");
+    }
+  };
+
+/**
+ * delete order item
+ * @param { Object } db the db object for interacting with the database
+ * @param { Object } req the request object containing the properties of product
+ * @returns { Object } returns the sucesss message
+ */
+export const deleteOrder =
+  ({ db }) =>
+  async (req, res) => {
+    try {
+      db.remove({
+        table: Order,
+        key: { id: req.params.id },
+      })
+        .then((order) => {
+          res.status(200).send({ message: "Deleted Successfully", order });
+        })
+        .catch((err) => {
+          console.log(err);
+          res.status(400).send({ message: err.message });
+        });
+    } catch (err) {
+      console.log(err);
+      res.status(500).send({ message: "Something went wrong" });
     }
   };
 

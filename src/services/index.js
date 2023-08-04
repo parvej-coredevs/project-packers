@@ -6,6 +6,7 @@ import coupon from "./coupon/coupon";
 import support from "./support/support";
 import order from "./order/order";
 import cart from "./cart/cart";
+import customer from "./customer/customer";
 
 export const services = (app) => {
   app.configure(user);
@@ -16,4 +17,5 @@ export const services = (app) => {
   app.configure(support);
   app.configure(order);
   app.configure(cart);
+  app.configure(customer);
 };

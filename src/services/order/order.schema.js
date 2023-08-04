@@ -1,6 +1,7 @@
 import { Schema, model } from "mongoose";
 import paginate from "mongoose-paginate-v2";
 import autopopulate from "mongoose-autopopulate";
+
 const schema = new Schema(
   {
     user: {
@@ -42,6 +43,7 @@ const schema = new Schema(
     note: {
       type: String,
     },
+    shipping_fee: { type: Number },
     refund_ref_id: { type: String },
   },
   { versionKey: false, timestamps: true }

@@ -3,6 +3,7 @@ import {
   getAllOrder,
   getSingleOrder,
   updateOrder,
+  deleteOrder,
   initiateRefund,
   refundStatus,
 } from "./order.entity.js";
@@ -33,6 +34,18 @@ export default function order() {
    * @response {Object} 200 - updated order object
    */
   this.route.patch("/order/:id", auth, checkRole(["admin"]), updateOrder(this));
+
+  /**
+   * DELETE /order/:id
+   * @description This route is used for delete order item. only admin can delete order.
+   * @response {Object} 200 - deleted message
+   */
+  this.route.delete(
+    "/order/:id",
+    auth,
+    checkRole(["admin"]),
+    deleteOrder(this)
+  );
 
   /**
    * GET /initiate-refund/:orderId

@@ -25,13 +25,6 @@ export default function cart() {
   this.route.post("/coupon/apply", auth, couponApply(this));
 
   /**
-   * POST /cart/quantity-update
-   * @description This route is used to update user cart item quantity.
-   * @response {Object} 200 - update cart item
-   */
-  this.route.post("/cart/quantity-update", auth, cartQuantityUpdate(this));
-
-  /**
    * POST /initiate-payment
    * @description This route is used for initiate-payment.
    * @response {Object} 201 - create a existing product request

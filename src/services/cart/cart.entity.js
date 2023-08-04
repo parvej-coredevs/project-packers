@@ -39,47 +39,6 @@ export const getUserCart =
   };
 
 /**
- * update user cart quantity
- * @param { Object } db the db object for interacting with the database
- * @param { Object } req the request object containing the properties of cart
- * @returns { Object } returns the cart items list
- */
-export const cartQuantityUpdate =
-  ({ db }) =>
-  async (req, res) => {
-    try {
-      const request = await Request.findOne({
-        user: req.user._id,
-        _id: req.body.requestId,
-      });
-
-      if (!request) return res.status(404).send("Request Not Found");
-      if (req.body.quantity > 12 || request.quantity > 12) {
-        return res.status(400).send("At a time Can't Order more than 12 items");
-      }
-
-      request.quantity = req.body.quantity;
-      await request.save();
-
-      const cart = await Cart.findOne({ user: request.user });
-
-      if (cart.couponApplied) {
-        return res
-          .status(400)
-          .send("Can't Update Item Quantity after applied coupon");
-      }
-
-      cart.totalAmount = await productPriceCalculate(cart);
-      await db.save(cart);
-
-      res.status(200).send({ cart, request });
-    } catch (error) {
-      console.error(error);
-      res.status(500).send("Something went wrong");
-    }
-  };
-
-/**
  * this function only used for calculate product price
  * @param { Object } query the query object is use to find user cart item
  * @example { user: userId }
@@ -218,7 +177,7 @@ export const initiatePaymentCheckout =
       if (!carts)
         return res
           .status(404)
-          .send({ message: "Please Request Item before Payment" });
+          .send({ message: "Please Add Request Item In Your Cart" });
 
       // generate request _id array for order.items field
       const orderItems = [];
@@ -226,9 +185,12 @@ export const initiatePaymentCheckout =
         orderItems.push(Item._id.toString());
       });
 
+      // add shipping fee
+      const shipping_fee = req.body.inside_dhaka === "yes" ? 100 : 150;
+
       // initiate payment
       const initiatePayment = await payment.init({
-        total_amount: carts.totalAmount - carts.discountAmount,
+        total_amount: carts.totalAmount + shipping_fee - carts.discountAmount,
         currency: "BDT",
         tran_id: trxId(),
         success_url: `${settings.hosturl}/checkout-success`,
@@ -265,9 +227,10 @@ export const initiatePaymentCheckout =
         // ship_state: req.body.shippingAddress.area,
         // ship_postcode: req.body.shippingAddress.zip,
         // ship_country: "Bangladesh",
-        value_a: req.user._id.toString(),
-        value_b: req.body.note,
-        value_c: orderItems.join(","),
+        value_a: req.user._id.toString(), // pass the user id for identify after payment which user pay
+        value_b: req.body.note || "", // pass the order note if user add note
+        value_c: orderItems.join(","), // pass the request item id for for cart schema items field.
+        value_d: shipping_fee, // pass the shipping fee
       });
 
       res.status(200).send({ url: initiatePayment.GatewayPageURL });
@@ -313,6 +276,7 @@ export const checkoutSuccess =
         status: paymentData.status === "Closed" ? "Paid" : "Unpaid",
         orderId: randomId(),
         note: validate.value_b,
+        shipping_fee: validate.value_d,
       });
 
       paymentData.order = order._id;
@@ -323,6 +287,7 @@ export const checkoutSuccess =
         requestIds: validate.value_c.split(","),
         updateStatus: { status: "closed" },
       });
+
       // empty user car
       await Cart.deleteOne({ user: validate.value_a });
 
@@ -404,6 +369,7 @@ export const checkoutFail =
         status: paymentData.status !== "Closed" ? "Unpaid" : "Paid",
         orderId: randomId(),
         note: payment.value_b,
+        shipping_fee: validate.value_d,
       });
 
       paymentData.order = order._id;
@@ -415,7 +381,7 @@ export const checkoutFail =
         updateStatus: { status: "abandoned" },
       });
 
-      // empty user car
+      // empty user cart
       await Cart.deleteOne({ user: payment.value_a });
 
       res.redirect("https://twitter.com"); // redirect to failed url

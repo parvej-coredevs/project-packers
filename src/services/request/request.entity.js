@@ -1,12 +1,8 @@
 import Request from "../request/request.schema";
 import Product from "../product/product.schema";
-import fileDelete from "../../utils/fileDelete";
 import fileUpload from "../../utils/fileUpload";
 import randomId from "../../utils/randomId";
 import mongoose from "mongoose";
-import User from "../user/user.schema";
-import shippingAddress from "../user/shipping.schema";
-import Payment from "../payment/payment.schema";
 import Order from "../order/order.schema";
 import productInvoice from "../../template/product-invoice";
 import Cart from "../cart/cart.schema";
@@ -17,11 +13,6 @@ const ObjectId = mongoose.Types.ObjectId;
 /**
  * these set are use to validate the request item information
  */
-// const createAllowed = new Set({
-//   product: [],
-//   request: ["quantity", "note" ]
-// });
-// const createAllowed = new Map([]);
 const updateAllowed = new Set([
   "link",
   "images",
@@ -72,7 +63,7 @@ export const create =
         return res.status(400).send("Bad request, Validation failed");
 
       // upload all products images
-      if (req?.files && Object.keys(req?.files).length > 0) {
+      if (req.files && Object.keys(req?.files).length > 0) {
         req.body.product.images = await fileUpload(req.files.images, imageUp);
       }
 
@@ -134,6 +125,47 @@ export const createExist =
   };
 
 /**
+ * update user request item quantity
+ * @param { Object } db the db object for interacting with the database
+ * @param { Object } req the request object containing the properties of cart
+ * @returns { Object } returns the cart items list
+ */
+export const itemQuantityUpdate =
+  ({ db }) =>
+  async (req, res) => {
+    try {
+      const request = await Request.findOne({
+        user: req.user._id,
+        _id: req.body.requestId,
+      });
+
+      if (!request) return res.status(404).send("Request Not Found");
+      if (req.body.quantity > 12 || request.quantity > 12) {
+        return res.status(400).send("At a time Can't Order more than 12 items");
+      }
+
+      request.quantity = req.body.quantity;
+      await request.save();
+
+      const cart = await Cart.findOne({ user: request.user });
+
+      if (cart.couponApplied) {
+        return res
+          .status(400)
+          .send("Can't Update Item Quantity after applied coupon");
+      }
+
+      cart.totalAmount = await productPriceCalculate(cart);
+      await db.save(cart);
+
+      res.status(200).send({ cart, request });
+    } catch (error) {
+      console.error(error);
+      res.status(500).send("Something went wrong");
+    }
+  };
+
+/**
  * get all request items
  * @param { Object } db the db object for interacting with the database
  * @param { Object } req the request object containing the properties of product
@@ -148,7 +180,9 @@ export const getRequestItem =
         key: {
           allowedQuery,
           paginate: req.query.paginate === "true",
+          query: req.query,
         },
+        ...(req.query.status && { status: req.query.status }),
       })
         .then(async (request) => {
           res.status(200).send(request);
@@ -214,8 +248,7 @@ export const updateRequest =
       });
 
       // check request is exist
-      if (Object.keys(request).length < 1)
-        return res.status(404).send("Requst Item Not Found");
+      if (!request) return res.status(404).send("Requst Item Not Found");
 
       // find the requested product
       let product = await db.findOne({
@@ -234,9 +267,9 @@ export const updateRequest =
         delete req.body.link;
       }
       product.price =
-        parseInt(req.body?.seller_takes) +
-        parseInt(req.body?.sales_taxs) +
-        parseInt(req.body?.packers_fee);
+        parseInt(req.body.seller_takes) +
+        parseInt(req.body.sales_taxs) +
+        parseInt(req.body.packers_fee);
 
       db.save(product);
 
