@@ -44,7 +44,7 @@ export default class App {
     this.payment = new Payment(
       settings.store_id,
       settings.store_password,
-      false
+      settings.is_sandbox
     );
     this.imageUp = imageUp;
     this.db = operations;

@@ -3,7 +3,7 @@ import category from "./category/category";
 import product from "./product/product";
 import request from "./request/request";
 import coupon from "./coupon/coupon";
-import support from "./support/support";
+import support, { supportSocket } from "./support/support";
 import order from "./order/order";
 import cart from "./cart/cart";
 import customer from "./customer/customer";
@@ -18,4 +18,7 @@ export const services = (app) => {
   app.configure(order);
   app.configure(cart);
   app.configure(customer);
+
+  // Load Socket events
+  supportSocket(app);
 };

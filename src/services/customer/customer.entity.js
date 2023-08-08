@@ -1,5 +1,6 @@
 import User from "../user/user.schema";
 import Order from "../order/order.schema";
+import mongoose from "mongoose";
 /**
  * these set are use to validate the request item information
  */
@@ -55,21 +56,15 @@ export const getCustomer =
             as: "orders.payment",
           },
         },
-        // request item populate korte hobe
-        {
-          $lookup: {
-            from: "requests",
-            localField: "orders.payment",
-            foreignField: "_id",
-            as: "orders.payment",
-          },
-        },
+        { $unwind: "$orders.payment" },
         {
           $group: {
             _id: "$_id",
             full_name: { $first: "$full_name" },
             phone: { $first: "$phone" },
             orders: { $push: "$orders" },
+            totalOrder: { $sum: 1 },
+            amountSpent: { $sum: "$orders.payment.amount" },
           },
         },
       ]);
@@ -82,10 +77,10 @@ export const getCustomer =
   };
 
 /**
- * get all coupon list
+ * get order by customer
  * @param { Object } db the db object for interacting with the database
  * @param { Object } req the request object containing the properties of product
- * @returns { Object } returns the coupon item list
+ * @returns { Object } returns the customer order list
  */
 export const getCustomerOrder =
   ({ db }) =>
@@ -93,9 +88,11 @@ export const getCustomerOrder =
     try {
       const user = await db.find({
         table: Order,
-        key: { paginate: req.query.paginate === "true", query: req.query },
+        key: {
+          paginate: req.query.paginate === "true",
+          user: req.params.userId,
+        },
       });
-
       res.send(user);
     } catch (error) {
       console.error(error);

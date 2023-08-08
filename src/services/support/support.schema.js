@@ -21,9 +21,8 @@ const schema = new Schema(
       required: true,
     },
     is_open: {
-      type: Number,
-      enum: [0, 1],
-      default: 1,
+      type: Boolean,
+      default: true,
     },
   },
   { versionKey: false, timestamps: true }

@@ -15,7 +15,7 @@ export default function coupon() {
    * @response {Object} 201 - create new coupon
    */
   this.route.get(
-    "/customer/:userId/order",
+    "/order/:userId/customer",
     auth,
     checkRole(["admin"]),
     getCustomerOrder(this)
