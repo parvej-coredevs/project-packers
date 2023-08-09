@@ -1,4 +1,10 @@
-import { create, getSupportList, supportCreate } from "./support.entity";
+import {
+  create,
+  getSupportList,
+  supportCreate,
+  joinSupportAgentRoom,
+  joinedSupportAgent,
+} from "./support.entity";
 import { auth } from "../middlewares";
 
 export default function support() {
@@ -18,5 +24,7 @@ export default function support() {
 }
 
 export function supportSocket(app) {
-  app.register("/createsupport", supportCreate);
+  app.register("joinsupporagent", joinSupportAgentRoom);
+  app.register("joinedagent", joinedSupportAgent);
+  app.register("createsupport", supportCreate);
 }

@@ -90,17 +90,41 @@ export const getSupportList =
 /**
  * create support
  * @param { Object } db the db object for interacting with the database
- * @param { Object } req the request object containing the properties of product
- * @returns { Object } returns the single request item object
+ * @param { Object } data data is payload of when socket emit and pass data
  */
-export const supportCreate =
-  ({ data, ws, db }) =>
-  (req, res) => {
-    try {
-      console.log("data", data);
-      console.log("ws", ws);
-    } catch (error) {
-      console.error(error);
-      res.status(500).send("Something went wrong");
-    }
-  };
+export const supportCreate = async ({ data, db }) => {
+  try {
+    const support = await db.create({ table: Support, key: data });
+    console.log("support", support);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Something went wrong");
+  }
+};
+
+/**
+ * support agent user joined support-agent room
+ * @param { Object } db the db object for interacting with the database
+ * @param { Object } data data is payload of when socket emit and pass data
+ */
+export const joinSupportAgentRoom = async ({ data, ws }) => {
+  try {
+    // console.log("ws", ws);
+    ws.emit("joinagent", data);
+
+    // console.log("room", data);
+    console.log("rooms", ws.rooms);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Something went wrong");
+  }
+};
+
+export const joinedSupportAgent = async ({ data, ws }) => {
+  try {
+    console.log("data", data);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Something went wrong");
+  }
+};

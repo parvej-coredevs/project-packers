@@ -3,18 +3,18 @@ import paginate from "mongoose-paginate-v2";
 
 const schema = new Schema(
   {
+    name: {
+      type: String,
+      required: true,
+    },
+    email: {
+      type: String,
+      required: true,
+    },
     type: {
       type: String,
       required: true,
       enum: ["account", "refund", "order", "payment"],
-    },
-    user: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-    orderId: {
-      type: String,
     },
     comment: {
       type: String,

@@ -10,7 +10,7 @@ const schema = new Schema(
     role: {
       type: String,
       required: true,
-      enum: ["super-admin", "admin", "staff", "support", "customer"],
+      enum: ["super-admin", "admin", "staff", "support-agent", "customer"],
       default: "customer",
     },
     password: { type: String },

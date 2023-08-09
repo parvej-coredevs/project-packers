@@ -70,7 +70,7 @@ export const register =
  * @returns It returns the data for success response. Otherwise it will through an error.
  */
 export const login =
-  ({ db, settings }) =>
+  ({ db, settings, ws }) =>
   async (req, res) => {
     try {
       if (!req.body.email || !req.body.password)
@@ -83,6 +83,7 @@ export const login =
       const isValid = await bcrypt.compare(req.body.password, user.password);
       if (!isValid) return res.status(401).send("Invalid Password");
       const token = jwt.sign({ id: user.id }, settings.token_secret);
+
       res.cookie(settings.token_key, token, {
         httpOnly: true,
         ...(settings.useHTTP2 && {
