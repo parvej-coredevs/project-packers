@@ -10,17 +10,17 @@ import { auth } from "../middlewares";
 export default function support() {
   /**
    * POST /support
-   * @description This route is used to create a support.
-   * @response {Object} 200 - the new user.
+   * @description This route is used to create a new support.
+   * @response {Object} 200 - the new suport.
    */
-  this.route.post("/support", auth, create(this));
+  this.route.post("/createsupport", auth, create(this));
 
   /**
    * GET /support
    * @description This route is used to find request item.
    * @response {Object} 200 - request list
    */
-  this.route.get("/support", auth, getSupportList(this));
+  this.route.get("/supportlist", auth, getSupportList(this));
 }
 
 export function supportSocket(app) {

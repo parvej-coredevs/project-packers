@@ -11,6 +11,7 @@ const schema = new Schema(
       type: String,
       required: true,
     },
+    orderId: { type: String },
     type: {
       type: String,
       required: true,
@@ -23,6 +24,9 @@ const schema = new Schema(
     is_open: {
       type: Boolean,
       default: true,
+    },
+    attachment: {
+      type: Array,
     },
   },
   { versionKey: false, timestamps: true }

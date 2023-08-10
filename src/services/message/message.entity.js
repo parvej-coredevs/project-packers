@@ -2,20 +2,11 @@ import Support from "../support/support.schema";
 import fileDelete from "../../utils/fileDelete";
 import fileUpload from "../../utils/fileUpload";
 import randomId from "../../utils/randomId";
+import Message from "./message.schema";
 /**
  * these set are use to validate the request item information
  */
-const createAllowed = new Set([
-  "name",
-  "email",
-  "user",
-  "type",
-  "orderId",
-  "comment",
-  "is_open",
-  "attachment",
-]);
-const updateAllowed = new Set(["type", "orderId", "comment", "is_open"]);
+const createAllowed = new Set(["user", "support", "sender", "message"]);
 const allowedQuery = new Set([
   "type",
   "orderId",
@@ -32,33 +23,28 @@ const allowedQuery = new Set([
 ]);
 
 /**
- * create new product request
+ * create new message
  * @param { Object } db the db object for interacting with the database
  * @param { Object } req the request object containing the properties of product
- * @returns { Object } returns the new cretated product request object
+ * @returns { Object } returns the new message
  */
 export const create =
-  ({ db, ws, imageUp }) =>
+  ({ db, ws }) =>
   async (req, res) => {
     try {
       // validate only alowed properties are inserted
       const valid = Object.keys(req.body).every((k) => createAllowed.has(k));
       if (!valid) return res.status(400).send("Bad request, Validation failed");
 
-      // if user uploaded file then upload to our server
-      if (Object.keys(req.files).length > 0) {
-        req.body.attachment = await fileUpload(req.files.attachment, imageUp);
-      }
-
-      // insert data in support collection
-      const support = await db.create({
-        table: Support,
+      // insert data in message collection
+      const message = await db.create({
+        table: Message,
         key: { ...req.body, user: req.user.id },
       });
 
-      ws.to("roomname").emit("supportcreated", support);
+      ws.to("roomname").emit("supportcreated", message);
 
-      res.send(support);
+      res.send(message);
     } catch (error) {
       console.log(error);
       return res.status(500).send("Internal server error");
@@ -66,32 +52,31 @@ export const create =
   };
 
 /**
- * get all suport items
+ * get all messageby support
  * @param { Object } db the db object for interacting with the database
  * @param { Object } req the request object containing the properties of product
- * @returns { Object } returns the request item list
+ * @returns { Object } returns the message list
  */
-export const getSupportList =
+export const allmessage =
   ({ db }) =>
   (req, res) => {
     try {
-      const { type, is_open } = req.query;
-      console.log(type);
+      const paginate = req.query.paginate === "true" ? true : false;
+      delete req.query.paginate;
       db.find({
-        table: Support,
+        table: Message,
         key: {
           allowedQuery,
-          paginate: req.query.paginate === "true",
+          paginate,
           populate: {
-            path: "user",
-            select: "full_name",
-            strictPopulate: false,
+            path: "user support",
           },
-          $or: [type && { type }, is_open && { is_open }],
+          query: req.query,
+          support: req.params.supportId,
         },
       })
-        .then((support) => {
-          res.status(200).send(support);
+        .then((message) => {
+          res.status(200).send(message);
         })
         .catch((err) => {
           console.error(err);
