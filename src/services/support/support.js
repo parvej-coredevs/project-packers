@@ -1,6 +1,8 @@
 import {
   create,
   getSupportList,
+  getSingleSupport,
+  updateSupport,
   supportCreate,
   joinSupportAgentRoom,
   joinedSupportAgent,
@@ -13,14 +15,28 @@ export default function support() {
    * @description This route is used to create a new support.
    * @response {Object} 200 - the new suport.
    */
-  this.route.post("/createsupport", auth, create(this));
+  this.route.post("/support", auth, create(this));
 
   /**
    * GET /support
-   * @description This route is used to find request item.
-   * @response {Object} 200 - request list
+   * @description This route is used to get all support list.
+   * @response {Object} 200 - support list
    */
   this.route.get("/supportlist", auth, getSupportList(this));
+
+  /**
+   * GET /support/:supportId
+   * @description This route is used to get single support.
+   * @response {Object} 200 - get single support
+   */
+  this.route.get("/support/:supportId", auth, getSingleSupport(this));
+
+  /**
+   * GET /support/:supportId
+   * @description This route is used to get single support.
+   * @response {Object} 200 - get single support
+   */
+  this.route.patch("/support/:supportId", auth, updateSupport(this));
 }
 
 export function supportSocket(app) {

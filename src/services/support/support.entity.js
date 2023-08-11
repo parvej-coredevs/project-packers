@@ -32,7 +32,7 @@ const allowedQuery = new Set([
 ]);
 
 /**
- * create new product request
+ * create new suport
  * @param { Object } db the db object for interacting with the database
  * @param { Object } req the request object containing the properties of product
  * @returns { Object } returns the new cretated product request object
@@ -97,6 +97,75 @@ export const getSupportList =
           console.error(err);
           res.status(500).send("Error: " + err.message);
         });
+    } catch (error) {
+      console.error(error);
+      res.status(500).send("Something went wrong");
+    }
+  };
+
+/**
+ * get all suport items
+ * @param { Object } db the db object for interacting with the database
+ * @param { Object } req the request object containing the properties of product
+ * @returns { Object } returns the request item list
+ */
+export const getSingleSupport =
+  ({ db }) =>
+  (req, res) => {
+    try {
+      db.findOne({
+        table: Support,
+        key: {
+          _id: req.params.supportId,
+        },
+      })
+        .then((support) => {
+          res.status(200).send(support);
+        })
+        .catch((err) => {
+          console.error(err);
+          res.status(500).send("Error: " + err.message);
+        });
+    } catch (error) {
+      console.error(error);
+      res.status(500).send("Something went wrong");
+    }
+  };
+
+/**
+ * update support
+ * @param { Object } db the db object for interacting with the database
+ * @param { Object } req the request object containing the properties of product
+ * @returns { Object } returns the updated support object
+ */
+export const updateSupport =
+  ({ db, imageUp }) =>
+  async (req, res) => {
+    try {
+      // validate only updateAllowed properties
+      const valid = Object.keys(req.body).every((k) => updateAllowed.has(k));
+      if (!valid) return res.status(400).send("Bad request, Validation failed");
+
+      if (Object.keys(req.files).length > 0) {
+        req.body.attachment = await fileUpload(req.files.attachment, imageUp);
+      }
+
+      // find request item
+      const support = await db.findOne({
+        table: Support,
+        key: { _id: req.params.id },
+      });
+
+      log;
+
+      // check support is exist
+      if (!support) return res.status(404).send("Invalid Support");
+
+      Object.keys(req.body).every((k) => (support[k] = req.body[k]));
+
+      res.status(200).send({ support });
+
+      db.save(support);
     } catch (error) {
       console.error(error);
       res.status(500).send("Something went wrong");
