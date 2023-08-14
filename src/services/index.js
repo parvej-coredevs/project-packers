@@ -8,6 +8,7 @@ import order from "./order/order";
 import cart from "./cart/cart";
 import customer from "./customer/customer";
 import message from "./message/message";
+import staff from "./staff/staff";
 
 export const services = (app) => {
   app.configure(user);
@@ -20,6 +21,7 @@ export const services = (app) => {
   app.configure(cart);
   app.configure(customer);
   app.configure(message);
+  app.configure(staff);
 
   // Load Socket events
   supportSocket(app);

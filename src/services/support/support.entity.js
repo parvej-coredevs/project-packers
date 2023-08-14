@@ -38,7 +38,7 @@ const allowedQuery = new Set([
  * @returns { Object } returns the new cretated product request object
  */
 export const create =
-  ({ db, ws, imageUp }) =>
+  ({ db, ws, session, imageUp }) =>
   async (req, res) => {
     try {
       // validate only alowed properties are inserted
@@ -56,7 +56,7 @@ export const create =
         key: { ...req.body, user: req.user.id },
       });
 
-      ws.to("roomname").emit("supportcreated", support);
+      ws.emit("supportcreated", support);
 
       res.send(support);
     } catch (error) {
@@ -177,37 +177,16 @@ export const updateSupport =
  * @param { Object } db the db object for interacting with the database
  * @param { Object } data data is payload of when socket emit and pass data
  */
-export const supportCreate = async ({ data, db }) => {
+export const roomCreate = async ({ data, db, ws, session }) => {
   try {
-    const support = await db.create({ table: Support, key: data });
-    console.log("support", support);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Something went wrong");
-  }
-};
-
-/**
- * support agent user joined support-agent room
- * @param { Object } db the db object for interacting with the database
- * @param { Object } data data is payload of when socket emit and pass data
- */
-export const joinSupportAgentRoom = async ({ data, ws }) => {
-  try {
+    // console.log("data", data);
+    // console.log("db", db);
     // console.log("ws", ws);
-    ws.emit("joinagent", data);
+    console.log("session", session.user);
 
-    // console.log("room", data);
-    console.log("rooms", ws.rooms);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Something went wrong");
-  }
-};
+    // session.join(data.room);
 
-export const joinedSupportAgent = async ({ data, ws }) => {
-  try {
-    console.log("data", data);
+    ws.to(data.room).emit("createdRoom", { room: support._id });
   } catch (error) {
     console.error(error);
     res.status(500).send("Something went wrong");

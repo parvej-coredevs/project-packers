@@ -3,6 +3,7 @@ import {
   getSupportList,
   getSingleSupport,
   updateSupport,
+  roomCreate,
   supportCreate,
   joinSupportAgentRoom,
   joinedSupportAgent,
@@ -40,7 +41,5 @@ export default function support() {
 }
 
 export function supportSocket(app) {
-  app.register("joinsupporagent", joinSupportAgentRoom);
-  app.register("joinedagent", joinedSupportAgent);
-  app.register("createsupport", supportCreate);
+  app.register("createdRoom", roomCreate);
 }
