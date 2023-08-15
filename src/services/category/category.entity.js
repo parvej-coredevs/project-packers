@@ -220,8 +220,6 @@ export const getSubCategory =
   ({ db }) =>
   (req, res) => {
     try {
-      console.log(Types.ObjectId(req.query.category));
-      return;
       // if (req.query.category &&  Types.ObjectId(req.query.category))
       db.find({
         table: SubCategory,
@@ -240,7 +238,7 @@ export const getSubCategory =
         });
     } catch (error) {
       console.error(error);
-      res.status(500).send("Something went wrong");
+      res.status(500).send("Something went wrong ");
     }
   };
 

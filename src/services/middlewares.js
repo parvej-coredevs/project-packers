@@ -48,3 +48,11 @@ export async function auth(req, res, next) {
     res.status(401).send({ status: 401, reason: "Unauthorized" });
   }
 }
+
+export function checkPermission(req, res, next) {
+  try {
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: "Unauthorized Access" });
+  }
+}
