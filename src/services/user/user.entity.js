@@ -43,20 +43,23 @@ export const register =
       const valid = Object.keys(req.body).every((k) => createAllowed.has(k));
       if (!valid) return res.status(400).send("Bad request");
       req.body.password = await bcrypt.hash(req.body.password, 8);
-      // const user = await db.create({ table: User, key: { ...req.body } });
+
+      const checkMail = await db.findOne({
+        table: User,
+        key: { email: req.body.email },
+      });
+
+      if (checkMail)
+        return res.status(400).send({ message: "Email Alredy Exists" });
+
       db.create({
         table: User,
         key: req.body,
       })
-        .then(async (user) => {
-          await db.save(user);
+        .then((user) => {
           res.status(200).send(user);
         })
         .catch(({ message }) => res.status(400).send({ message }));
-
-      // if (!user) return res.status(400).send('Bad request');
-      // await db.save(user);
-      // return res.status(200).send(user);
     } catch (e) {
       console.log(e);
       res.status(500).send("Something went wrong.");
