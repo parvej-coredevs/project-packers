@@ -220,15 +220,18 @@ export const getSubCategory =
   ({ db }) =>
   (req, res) => {
     try {
-      console.log(req.query);
+      console.log(Types.ObjectId(req.query.category));
+      return;
+      // if (req.query.category &&  Types.ObjectId(req.query.category))
       db.find({
         table: SubCategory,
         key: {
           paginate: req.query.paginate === "true",
           populate: { path: "parentCat", select: "name slug" },
+          ...(req.query.category && { parentCat: req.query.category }),
         },
       })
-        .then(async (categories) => {
+        .then((categories) => {
           res.status(200).send(categories);
         })
         .catch((err) => {

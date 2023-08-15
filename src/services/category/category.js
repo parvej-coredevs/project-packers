@@ -80,7 +80,7 @@ export default function category() {
 
   /**
    * GET /sub-category
-   * @description This route is used for get all category with pagination.
+   * @description This route is used for get all sub category with pagination.
    * @returns {Object} 200 - all category list.
    */
   this.route.get("/sub-category", getSubCategory(this));

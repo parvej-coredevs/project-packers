@@ -117,6 +117,14 @@ export default class App {
     this.express.use(parse()); // Parse Form data as JSON
     this.express.use("/api", limiter, this.router); // All the API routes
     this.express.use(express.static(path.resolve(__dirname, "..", "client"))); // REACT build files (Statics)
+    this.express.use((req, res, next) => {
+      res.header("Access-Control-Allow-Origin", "http://localhost:5173");
+      res.header(
+        "Access-Control-Allow-Headers",
+        "Origin, X-Requested-With, Content-Type, Accept"
+      );
+      next();
+    });
 
     // setup passport configuration
     passportConfig(passport, this.config);
