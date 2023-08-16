@@ -30,8 +30,8 @@ export const getAllOrder =
       const query = {};
       if (req.query?.sortBy) query.sortBy = req.query?.sortBy;
       if (req.query?.search) query.search = req.query?.search;
-      if (req.query?.page) query.search = req.query?.page;
-      if (req.query?.limit) query.search = req.query?.limit;
+      if (req.query?.page) query.page = req.query?.page;
+      if (req.query?.limit) query.limit = req.query?.limit;
 
       db.find({
         table: Order,
@@ -39,6 +39,7 @@ export const getAllOrder =
           allowedQuery,
           paginate: req.query?.paginate === "true",
           query,
+          ...(req.query.status && { status: req.query.status }),
         },
       })
         .then(async (order) => {

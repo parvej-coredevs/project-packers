@@ -1,5 +1,9 @@
 import { auth, checkRole } from "../../services/middlewares.js";
-import { getCustomer, getCustomerOrder } from "./customer.entity.js";
+import {
+  getCustomer,
+  getCustomerOrder,
+  exportCustomerData,
+} from "./customer.entity.js";
 
 export default function coupon() {
   /**
@@ -22,9 +26,14 @@ export default function coupon() {
   );
 
   /**
-   * GET /coupon/:id
-   * @description This route is used to find single coupon item.
-   * @response {Object} 200 - single coupon item object
+   * GET /export-customer
+   * @description This route is used for export customer data.
+   * @response {Object} 200 - return the server download link
    */
-  // this.route.get("/coupon/:id", auth, getSinglecoupon(this));
+  this.route.get(
+    "/export-customer",
+    auth,
+    checkRole(["admin"]),
+    exportCustomerData(this)
+  );
 }
