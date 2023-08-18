@@ -56,15 +56,7 @@ export default function user() {
    * @description this route is user logout.
    * @response {Object} 200 - the user.
    */
-  this.route.get("/user/logout", (req, res) => {
-    req.logout(function (err) {
-      if (err) {
-        console.error("Error during logout:", err);
-        return res.status(500).send("Error during logout");
-      }
-      res.redirect("/");
-    });
-  });
+  this.route.get("/user/logout", auth, logout(this));
 
   /**
    * GET /user/me

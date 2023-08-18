@@ -37,7 +37,7 @@ const ownUpdateAllowed = new Set([
  * @throws {Error} If the request body includes properties other than those allowed or if there is an error during the database operation.
  */
 export const register =
-  ({ db }) =>
+  ({ db, lyra }) =>
   async (req, res) => {
     try {
       const valid = Object.keys(req.body).every((k) => createAllowed.has(k));
@@ -74,7 +74,7 @@ export const register =
  */
 export const login =
   ({ db, settings, ws }) =>
-  async (req, res) => {
+  async (req, res, next) => {
     try {
       if (!req.body.email || !req.body.password)
         return res.status(400).send("Bad requests");
@@ -87,17 +87,30 @@ export const login =
       if (!isValid) return res.status(401).send("Invalid Password");
       const token = jwt.sign({ id: user.id }, settings.token_secret);
 
-      res.cookie(settings.token_key, token, {
-        httpOnly: true,
-        ...(settings.useHTTP2 && {
-          sameSite: "None",
-          secure: true,
-        }),
-        ...(!req.body.rememberMe && {
-          expires: new Date(Date.now() + 172800000 /*2 days*/),
-        }),
+      if (user.role === "staff") {
+        if (req.session.staff !== undefined) {
+          req.session.staff.push(`${user.id}`);
+        } else {
+          req.session.staff = [`${user.id}`];
+        }
+      }
+
+      req.session.save(function (err) {
+        if (err) return next(err);
+
+        res.cookie(settings.token_key, token, {
+          httpOnly: true,
+          ...(settings.useHTTP2 && {
+            sameSite: "None",
+            secure: true,
+          }),
+          ...(!req.body.rememberMe && {
+            expires: new Date(Date.now() + 172800000 /*2 days*/),
+          }),
+        });
+
+        res.status(200).send(token);
       });
-      res.status(200).send(user);
     } catch (err) {
       console.log(err);
       res.status(500).send("Something went wrong");
@@ -127,17 +140,32 @@ export const me = () => async (req, res) => {
  */
 export const logout =
   ({ settings }) =>
-  async (req, res) => {
+  async (req, res, next) => {
     try {
-      res.clearCookie("token", {
-        httpOnly: true,
-        ...(settings.useHTTP2 && {
-          sameSite: "None",
-          secure: true,
-        }),
-        expires: new Date(Date.now()),
+      if (req.user.role === "staff") {
+        req.session.staff = req.session.staff.filter(
+          (item) => item !== req.user._id.toString()
+        );
+      }
+
+      req.session.save(function (err) {
+        if (err) {
+          return next(err);
+        }
+
+        res.clearCookie("token", {
+          httpOnly: true,
+          ...(settings.useHTTP2 && {
+            sameSite: "None",
+            secure: true,
+          }),
+          expires: new Date(Date.now()),
+        });
+
+        console.log("from logout session", req.session);
+
+        res.status(200).send("Logout successful");
       });
-      return res.status(200).send("Logout successful");
     } catch (err) {
       console.log(err);
       res.status(500).send("Something went wrong");

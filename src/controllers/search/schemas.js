@@ -1,5 +1,6 @@
 export const schemas = {
-  demo: {
-    name: 'string'
-  }
+  user: {
+    name: "string",
+    role: "string",
+  },
 };

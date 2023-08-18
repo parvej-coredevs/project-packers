@@ -29,9 +29,16 @@ export const getAllOrder =
     try {
       const query = {};
       if (req.query?.sortBy) query.sortBy = req.query?.sortBy;
-      if (req.query?.search) query.search = req.query?.search;
       if (req.query?.page) query.page = req.query?.page;
       if (req.query?.limit) query.limit = req.query?.limit;
+
+      // calculate date range
+      const date = { createdAt: {} };
+      if (req.query?.date) {
+        const [starting, ending] = req.query.date.split("|");
+        date.createdAt.$gte = starting;
+        date.createdAt.$lte = ending || new Date();
+      }
 
       db.find({
         table: Order,
@@ -39,6 +46,7 @@ export const getAllOrder =
           allowedQuery,
           paginate: req.query?.paginate === "true",
           query,
+          ...(req.query.date && date),
           ...(req.query.status && { status: req.query.status }),
         },
       })

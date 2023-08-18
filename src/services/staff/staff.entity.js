@@ -22,7 +22,7 @@ export const create =
 
       if (!valid) return res.status(400).send("Bad request, Validation failed");
 
-      const generatePass = randomId(7);
+      const generatePass = randomId(10);
       const hashedPass = await bcrypt.hash(generatePass, 8);
 
       db.create({
@@ -39,7 +39,10 @@ export const create =
           const sendMail = await mail({
             receiver: user.email,
             subject: `Project Packers Added you as Staff`,
-            body: `Welcome ${user.full_name}, Your are new member ${user.role} Project Packers`,
+            body: `Hello ${user.full_name}, Welcome to Project Packers. Your are new ${user.role} of our team.
+            Your authentication credentials :-
+            Email : ${user.email}
+            Password : ${generatePass}`,
             type: "text",
           });
           res.status(200).send({ user, sendMail });
@@ -48,6 +51,42 @@ export const create =
     } catch (error) {
       console.log(error);
       return res.status(500).send("Internal server error");
+    }
+  };
+
+/**
+ * get staff details
+ * @param { Object } db the db object for interacting with the database
+ * @param { Object } req the request object containing the properties of category
+ * @returns { Object } returns the new  database access object
+ */
+export const getStafff =
+  ({ db }) =>
+  async (req, res) => {
+    try {
+      const staff = await db.find({
+        table: User,
+        key: {
+          paginate: req.query.paginate === "true",
+          allowedQuery: new Set([
+            "paginate",
+            "page",
+            "limit",
+            "sortBy",
+            "search",
+          ]),
+          query: req.query,
+          role: "staff",
+          status: "active",
+        },
+      });
+
+      console.log("from staff session", req.session);
+
+      res.status(200).send(staff);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send("Something went wrong");
     }
   };
 

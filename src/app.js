@@ -101,7 +101,7 @@ export default class App {
       session({
         secret: this.config.token_secret,
         resave: false,
-        saveUninitialized: false,
+        saveUninitialized: true,
       })
     );
 

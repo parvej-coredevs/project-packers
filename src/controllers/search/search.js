@@ -1,31 +1,36 @@
-import { create as lcreate, insert as linsert, remove as lremove, search as lsearch } from '@orama/orama';
-import { persistToFile, restoreFromFile } from '@orama/plugin-data-persistence';
-import path from 'path';
-import fs from 'fs';
-import { schemas } from './schemas';
+import {
+  create as lcreate,
+  insert as linsert,
+  remove as lremove,
+  search as lsearch,
+} from "@orama/orama";
+import { persistToFile, restoreFromFile } from "@orama/plugin-data-persistence";
+import path from "path";
+import fs from "fs";
+import { schemas } from "./schemas";
 
 // const eventsToHandle = ['SIGTERM', 'SIGINT', 'unhandledRejection', 'uncaughtException', 'SIGUSR2'];
 
 /**
  * SearchCtrl is a class that encapsulates methods for starting and controlling Lyra search instances,
  * as well as methods for inserting, removing and searching data within those instances.
-*/
+ */
 export default class SearchCtrl {
   constructor() {
     /**
      * This object will store the Lyra search instances for each schema.
      * @type {Object}
-    */
+     */
     this.instances = {};
     /**
      * The data path where the instances will be persisted.
      * @type {string}
-    */
-    this.dataPath = path.join(path.resolve(), '.cache');
+     */
+    this.dataPath = path.join(path.resolve(), ".cache");
     /**
      * The schemas for the Lyra instances.
      * @type {Object}
-    */
+     */
     this.schemas = schemas;
   }
 
@@ -33,12 +38,13 @@ export default class SearchCtrl {
    * restore method that restores the instances from a file if it exists, otherwise it returns false.
    * @param {string} path - The file path where the instance is stored.
    * @return {Promise} - Promise object represents the instance or false.
-  */
+   */
   async restore(path) {
     try {
-      return await restoreFromFile('binary', path);
+      return await restoreFromFile("binary", path);
+    } catch (e) {
+      return false;
     }
-    catch (e) { return false; }
   }
 
   /**
@@ -46,9 +52,17 @@ export default class SearchCtrl {
    *
    * @param {Array<string>} [keys=Object.keys(this.schemas)] - The keys of the instances to save
    * @returns {Promise<Array>} - A Promise that resolves to an array of the results of saving each instance to disk
-  */
+   */
   save(keys = Object.keys(this.schemas)) {
-    return Promise.all(keys.map((k, i) => persistToFile(this.instances[k], 'binary', `${path.join(this.dataPath, keys[i] + '.msp')}`)));
+    return Promise.all(
+      keys.map((k, i) =>
+        persistToFile(
+          this.instances[k],
+          "binary",
+          `${path.join(this.dataPath, keys[i] + ".msp")}`
+        )
+      )
+    );
   }
 
   /**
@@ -58,14 +72,22 @@ export default class SearchCtrl {
    * 2. The `instances` object is populated by creating or restoring instances for each key
    * 3. The `save` method is called to save the instances to disk
    * 4. Event handlers for `eventsToHandle` are added to the process, which will save the instances and exit the process upon encountering the specified events
-  */
+   */
   async start() {
-    if (!fs.existsSync(this.dataPath)) fs.mkdirSync(this.dataPath, { recursive: true });
+    if (!fs.existsSync(this.dataPath))
+      fs.mkdirSync(this.dataPath, { recursive: true });
     const keys = Object.keys(this.schemas);
-    await Promise.all(keys.map(async k => (this.instances[k] = (await this.restore(`${path.join(this.dataPath, k + '.msp')}`) || await lcreate({ schema: this.schemas[k] })))));
+    await Promise.all(
+      keys.map(
+        async (k) =>
+          (this.instances[k] =
+            (await this.restore(`${path.join(this.dataPath, k + ".msp")}`)) ||
+            (await lcreate({ schema: this.schemas[k] })))
+      )
+    );
     await this.save(keys);
 
-    console.log('=> Search controller started');
+    console.log("=> Search controller started");
   }
 
   /**
@@ -73,7 +95,7 @@ export default class SearchCtrl {
    * @param {string} key - The key of the Lyra instance to insert data into.
    * @param {Object} value - The data to be inserted.
    * @return {Promise} - Promise object represents the inserted data.
-  */
+   */
   async insert(key, value) {
     return await linsert(this.instances[key], value);
   }
@@ -86,12 +108,11 @@ export default class SearchCtrl {
    * @param {Object} query - The query object to search and remove the instance with
    * @param {boolean} query.exact - Flag to indicate whether the search should match exactly or not, defaults to true
    * @returns {Promise<void>} - The result of the remove operation
-  */
+   */
   async remove(key, id) {
     try {
       await lremove(this.instances[key], id);
-    }
-    catch (e) {
+    } catch (e) {
       //
     }
   }
@@ -105,12 +126,12 @@ export default class SearchCtrl {
    * @param {string} query.term - The search term to use, defaults to an empty string
    * @param {string} query.properties - The properties to search in, defaults to '*'
    * @returns {Promise<any>} - The result of the search operation
-  */
+   */
   async search(key, query) {
     return await lsearch(this.instances[key], {
       ...query,
-      term: query.term || '',
-      properties: query.properties || '*'
+      term: query.term || "",
+      properties: query.properties || "*",
     });
   }
 }

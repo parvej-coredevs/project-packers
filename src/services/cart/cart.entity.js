@@ -247,7 +247,7 @@ export const initiatePaymentCheckout =
  * @returns { Object } returns the existing product request object
  */
 export const checkoutSuccess =
-  ({ db, payment }) =>
+  ({ db, payment, lyra }) =>
   async (req, res) => {
     try {
       // validate user payment
