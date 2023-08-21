@@ -1,5 +1,5 @@
 {
-  "port": 2000,
+  "port": 4000,
   "origin": ["http://localhost:5173"],
   "useHTTP2": false,
   "SMTP_HOST": "smtp.google.com",
@@ -11,14 +11,13 @@
   "MONGODB_URL": "mongodb+srv://parvejhossain:parvejhossain@cluster0.jkdxpyh.mongodb.net/projectpacker",
   "token_secret": "ywaierh3294209",
   "token_key": "token",
-  "reset_pass_secret": "yuaslkfjlksadfoewjff",
   "store_id": "cored64bf7afe242ad",
   "store_password": "cored64bf7afe242ad@ssl",
   "is_sandbox": false,
-  "hosturl": "http://localhost:2000/api",
+  "hosturl": "http://localhost:4000/api",
   "GOOGLE_CLIENT_ID": "503784692129-gq66mmhh1f590v8aq2dc50ss506bunii.apps.googleusercontent.com",
   "GOOGLE_CLIENT_SECRET": "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",
-  "GOOGLE_CALLBACK": "http://localhost:2000/api/auth/google/callback",
+  "GOOGLE_CALLBACK": "http://localhost:4000/api/auth/google/callback",
   "FACEBOOK_APP_ID": "951305785979793",
   "FACEBOOK_APP_SECRET": "21253c27a4451b541f0f588432730866",
   "FACEBOOK_CALLBACK": "/api/auth/facebook/callback"

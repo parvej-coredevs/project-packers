@@ -3,6 +3,7 @@ import settings from "../../settings.json";
 
 // Encryption function
 function encryptData(data) {
+  data = JSON.stringify(data);
   const encryptedData = crypto.AES.encrypt(
     data,
     settings.token_secret
@@ -16,7 +17,9 @@ function decryptData(encryptedData) {
     encryptedData,
     settings.token_secret
   ).toString(crypto.enc.Utf8);
-  return decryptedData;
+  const secretData = JSON.parse(decryptedData);
+  console.log("secretData", secretData);
+  return secretData;
 }
 
 export { encryptData, decryptData };

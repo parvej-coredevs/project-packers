@@ -322,12 +322,13 @@ export const resetPassword =
           .send({ messae: "Invalid Email, User not found" });
 
       const otp = otpGenerate();
-      const token = `${encryptData(otp)}|${
-        new Date().getTime() + 1000 * 60 * 5
-      }`;
+      const token = encryptData({
+        otp,
+        expireTime: new Date().getTime() + 1000 * 60 * 5,
+      });
 
-      // console.log(otp);
-      // console.log(token);
+      console.log(otp);
+      console.log(token);
 
       const sendMail = await mail({
         receiver: user.email,
@@ -346,21 +347,21 @@ export const resetPassword =
 
 export const verifyOtp = () => async (req, res) => {
   try {
-    const [token, expireTime] = req.body.token.split("|");
-    const decryptToken = decryptData(token);
+    const secretData = decryptData(req.body.token);
     const currentTime = new Date().getTime();
 
-    if (currentTime > expireTime) {
+    if (currentTime > secretData.expireTime) {
       return res.status(500).send("OTP code is expired");
     }
 
-    if (!decryptToken === req.body.code) {
+    if (!(secretData.otp === req.body.code)) {
       return res.status(500).send("Invalid OTP code");
     }
 
-    const newToken = encryptData(settings.reset_pass_secret);
+    secretData.otpUsed = true;
+    const token = encryptData(secretData);
 
-    res.status(200).send({ newToken });
+    res.status(200).send({ token });
   } catch (err) {
     console.log(err);
     res.status(500).send({ message: "Something went wrong" });
@@ -371,9 +372,9 @@ export const updatePassword =
   ({ db }) =>
   async (req, res) => {
     try {
-      const decryptToken = decryptData(req.body.token);
+      const decryptData = decryptData(req.body.token);
 
-      if (!decryptToken === settings.token_secret) {
+      if (decryptData.otpUsed) {
         return res.status(500).send({ message: "Invalid Request" });
       }
 
